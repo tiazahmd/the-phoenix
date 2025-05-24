@@ -1,0 +1,235 @@
+# .cursorrules
+
+# === General behavior ===
+always_ask_before_change: true       # ask questions if unclear
+pre_apply_diff: true                 # show you a diff and wait for your OK
+explain_complex_changes: true        # provide detailed explanations for non-trivial changes
+show_alternatives: true              # present different approaches when relevant
+
+# === Code organization ===
+max_file_length: 300                 # split files bigger than 300 lines
+avoid_duplicate_code: true           # try to reuse existing functions/modules
+prefer_simple_solutions: true        # avoid over-engineering
+max_function_length: 50              # keep functions focused and concise
+enforce_naming_conventions: true     # consistent naming across codebase
+group_related_files: true           # organize files by feature/domain
+
+# === UI requirements ===
+ui_quality:
+  - "Elegant, reactive, and user-friendly components only"
+  - "Follow iOS 16 design guidelines (no web-style scraps)"
+  - "Implement responsive design patterns"
+  - "Ensure accessibility compliance"
+  - "Support dark/light mode"
+
+# === Testing ===
+generate_tests_for_every_feature: true
+include_edge_cases: true
+mock_data_only_for_tests: true
+no_mock_in_dev_or_prod: true
+test_coverage_threshold: 80          # minimum test coverage percentage
+include_integration_tests: true      # not just unit tests
+add_performance_tests: true          # for critical paths
+
+# === Security ===
+check_security_best_practices: true  # review for security issues
+validate_input_data: true           # ensure proper data validation
+avoid_sensitive_data_exposure: true  # careful with logs and errors
+use_secure_dependencies: true       # check for vulnerable packages
+
+# === Performance ===
+optimize_bundle_size: true          # keep bundle size minimal
+implement_caching: true            # use appropriate caching strategies
+lazy_load_components: true         # defer loading when possible
+
+# === Documentation ===
+require_jsdoc: true                # enforce documentation for functions/classes
+update_readme: true                # keep README in sync with changes
+document_api_endpoints: true       # maintain API documentation
+include_code_examples: true        # add examples for complex features
+
+# === Environments ===
+env_files:
+  - name: .env.development
+  - name: .env.test
+  - name: .env.production
+never_overwrite_env: true            # always ask before changing .env
+validate_env_vars: true             # ensure all required vars are present
+
+# === Refactoring & cleanup ===
+exhaust_existing_impl_before_new: true
+remove_old_code_after_refactor: true
+maintain_git_history: true          # preserve important commit messages
+clean_up_dependencies: true         # remove unused packages
+
+# === Error Handling ===
+use_typed_errors: true              # create specific error types
+implement_global_error_boundary: true # catch unhandled errors
+provide_user_friendly_errors: true   # clear error messages for users
+
+# === Scripts & one-offs ===
+avoid_scripts_in_code: true
+document_all_scripts: true          # explain purpose and usage
+version_control_scripts: true       # include scripts in repository
+
+# === Code Quality ===
+enforce_eslint_rules: true          # follow strict linting
+use_typescript_strictly: true       # enable strict TypeScript checks
+follow_solid_principles: true       # adhere to SOLID design principles
+
+# === State Management ===
+use_immutable_state: true           # prevent direct state mutations
+implement_state_selectors: true     # centralize state access
+document_state_shape: true          # maintain state documentation
+enforce_unidirectional_flow: true   # follow strict data flow patterns
+avoid_prop_drilling: true           # use proper state management
+
+# === API Design ===
+use_rest_conventions: true          # follow REST principles
+version_all_apis: true              # maintain API versioning
+implement_rate_limiting: true       # protect API endpoints
+provide_swagger_docs: true          # OpenAPI/Swagger documentation
+handle_api_versioning: true         # proper API version management
+
+# === Monitoring & Logging ===
+implement_error_tracking: true       # use error tracking service
+add_performance_monitoring: true     # monitor critical metrics
+structured_logging: true            # consistent log format
+log_security_events: true           # track security-related actions
+maintain_audit_trail: true          # track important user actions
+
+# === Internationalization ===
+support_multiple_languages: true     # i18n support
+use_translation_keys: true          # no hardcoded strings
+rtl_support: true                   # right-to-left language support
+locale_specific_formatting: true     # dates, numbers, currency
+
+# === Build & Deploy ===
+automate_versioning: true           # semantic versioning
+implement_ci_cd: true              # continuous integration/deployment
+create_staging_environment: true    # proper testing environment
+backup_strategy: true              # data backup procedures
+rollback_capability: true          # ability to revert deployments
+
+# === Code Review ===
+require_peer_review: true           # mandatory code review
+use_pr_templates: true             # structured pull requests
+enforce_commit_style: true         # consistent commit messages
+check_breaking_changes: true       # identify breaking changes
+review_performance_impact: true    # assess performance implications
+
+# === iOS (SwiftUI) Specific ===
+enforce_swiftui_best_practices: true  # follow SwiftUI patterns
+use_combine_properly: true            # proper Combine usage
+implement_face_id_touch_id: true      # biometric authentication
+follow_ios_hig: true                  # iOS Human Interface Guidelines
+support_dynamic_type: true            # accessibility text sizing
+handle_background_modes: true         # proper app state handling
+implement_widget_extensions: true     # iOS widget support
+optimize_battery_usage: true          # efficient battery consumption
+handle_deep_links: true              # universal links and custom URL schemes
+use_swift_concurrency: true          # async/await patterns
+
+# === Django Backend Specific ===
+use_django_best_practices: true       # follow Django conventions
+implement_django_rest_framework: true  # DRF usage
+use_django_orm_properly: true         # efficient ORM queries
+implement_django_caching: true        # proper cache usage
+handle_django_migrations: true        # migration strategy
+use_django_admin: true               # admin interface customization
+implement_django_signals: true        # proper signal usage
+use_celery_tasks: true              # background task handling
+
+# === AWS Infrastructure ===
+follow_aws_best_practices: true       # AWS service usage
+implement_cognito_auth: true         # Cognito authentication
+use_fargate_containers: true         # container deployment
+optimize_rds_usage: true             # database optimization
+implement_sns_properly: true         # notification handling
+use_cloudwatch_logging: true         # proper logging
+implement_aws_backup: true           # backup strategies
+
+# === Real-Time Features ===
+implement_websockets: true           # WebSocket implementation
+handle_socket_reconnection: true     # connection recovery
+implement_presence: true             # online status handling
+optimize_real_time_updates: true     # efficient updates
+
+# === AI Integration ===
+implement_openai_properly: true      # OpenAI API usage
+cache_ai_responses: true            # response caching
+handle_ai_failures: true            # fallback strategies
+optimize_token_usage: true          # efficient prompt design
+
+# === Analytics & Monitoring ===
+implement_firebase_analytics: true    # Firebase integration
+use_sentry_properly: true           # error tracking
+implement_custom_events: true       # event tracking
+monitor_performance_metrics: true    # performance tracking
+implement_crash_reporting: true     # crash handling
+
+# === Documentation Versioning & Validation ===
+documentation_versions:
+  swift_version: "5.9"              # Current Swift version
+  swiftui_version: "5.0"            # Current SwiftUI version
+  combine_version: "4.0"            # Current Combine framework version
+  ios_target: "17.0"               # Minimum iOS target
+  xcode_version: "15.0"            # Current Xcode version
+  django_version: "5.0"            # Current Django version
+  python_version: "3.12"           # Current Python version
+  drf_version: "3.14"             # Current Django REST framework version
+  postgresql_version: "16"         # Current PostgreSQL version
+  node_version: "20.0"            # Current Node.js LTS version
+
+documentation_sources:
+  ios:
+    - name: "Apple Developer Documentation"
+      url: "https://developer.apple.com/documentation"
+      check_updates: true
+    - name: "Swift Documentation"
+      url: "https://www.swift.org/documentation"
+      check_updates: true
+    - name: "Human Interface Guidelines"
+      url: "https://developer.apple.com/design/human-interface-guidelines"
+      check_updates: true
+  
+  django:
+    - name: "Django Documentation"
+      url: "https://docs.djangoproject.com/en/stable"
+      check_updates: true
+    - name: "Django REST Framework"
+      url: "https://www.django-rest-framework.org"
+      check_updates: true
+  
+  aws:
+    - name: "AWS Documentation"
+      url: "https://docs.aws.amazon.com"
+      check_updates: true
+    - name: "AWS Well-Architected Framework"
+      url: "https://aws.amazon.com/architecture/well-architected"
+      check_updates: true
+  
+  ai:
+    - name: "OpenAI API Documentation"
+      url: "https://platform.openai.com/docs"
+      check_updates: true
+    - name: "OpenAI Cookbook"
+      url: "https://cookbook.openai.com"
+      check_updates: true
+
+# === Documentation Compliance ===
+enforce_documentation_versions: true  # ensure code follows current version docs
+check_deprecation_warnings: true     # warn about deprecated APIs
+validate_api_versions: true          # verify API compatibility
+track_breaking_changes: true         # monitor breaking changes in dependencies
+auto_update_docs: true              # keep documentation in sync with versions
+
+# === Best Practices Updates ===
+monitor_tech_blogs: true             # track official tech blogs for updates
+follow_release_notes: true          # monitor release notes for all dependencies
+implement_security_bulletins: true   # follow security update recommendations
+update_coding_guidelines: true      # keep coding guidelines current
+validate_example_code: true         # ensure example code is current
+
+pre_apply_diff: true
+always_ask_before_change: true

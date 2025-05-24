@@ -1,0 +1,9 @@
+{
+  "name": "phoenix-notification-handler",
+  "version": "1.0.0",
+  "description": "Notification handling Lambda function for Phoenix app",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1502.0"
+  }
+} 

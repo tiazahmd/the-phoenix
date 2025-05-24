@@ -1,0 +1,28 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:GetFunction",
+                "lambda:ListFunctions",
+                "lambda:CreateFunction",
+                "lambda:DeleteFunction",
+                "lambda:TagResource",
+                "lambda:UntagResource",
+                "lambda:PublishVersion",
+                "lambda:CreateAlias",
+                "lambda:DeleteAlias",
+                "lambda:UpdateAlias"
+            ],
+            "Resource": [
+                "arn:aws:lambda:us-west-2:947502101623:function:phoenix-image-processor-dev",
+                "arn:aws:lambda:us-west-2:947502101623:function:phoenix-image-processor-prod",
+                "arn:aws:lambda:us-west-2:947502101623:function:phoenix-notification-handler-dev",
+                "arn:aws:lambda:us-west-2:947502101623:function:phoenix-notification-handler-prod"
+            ]
+        }
+    ]
+} 
