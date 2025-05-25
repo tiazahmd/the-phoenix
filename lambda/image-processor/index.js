@@ -4,13 +4,6 @@ const sharp = require('sharp');
 const s3 = new AWS.S3();
 const sns = new AWS.SNS();
 
-const SUPPORTED_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
-const SIZES = {
-    thumbnail: { width: 150, height: 150 },
-    medium: { width: 800, height: 800 },
-    large: { width: 1600, height: 1600 }
-};
-
 exports.handler = async (event) => {
     console.log('Processing event:', JSON.stringify(event, null, 2));
     
@@ -20,28 +13,23 @@ exports.handler = async (event) => {
         
         console.log(`Processing image from bucket: ${bucket}, key: ${key}`);
 
-        // Check if this is a supported image format
-        const format = key.split('.').pop().toLowerCase();
-        if (!SUPPORTED_FORMATS.includes(format)) {
-            console.log(`Unsupported format: ${format}. Skipping processing.`);
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: `Unsupported image format: ${format}` })
-            };
-        }
-        
         // Get the image from S3
-        console.log(`Fetching image from S3: ${bucket}/${key}`);
         const inputImage = await s3.getObject({
             Bucket: bucket,
             Key: key
         }).promise();
-        
+
         console.log('Successfully retrieved image from S3');
-        
+
         // Process image for different sizes
+        const sizes = {
+            thumbnail: { width: 150, height: 150 },
+            medium: { width: 800, height: 800 },
+            large: { width: 1600, height: 1600 }
+        };
+
         const processedImages = await Promise.all(
-            Object.entries(SIZES).map(async ([size, dimensions]) => {
+            Object.entries(sizes).map(async ([size, dimensions]) => {
                 console.log(`Processing ${size} version...`);
                 const processedBuffer = await sharp(inputImage.Body)
                     .resize(dimensions.width, dimensions.height, {
@@ -56,7 +44,7 @@ exports.handler = async (event) => {
                     Bucket: bucket,
                     Key: targetKey,
                     Body: processedBuffer,
-                    ContentType: `image/${format}`
+                    ContentType: 'image/jpeg'
                 }).promise();
 
                 console.log(`Successfully uploaded ${size} version to ${targetKey}`);
@@ -96,27 +84,11 @@ exports.handler = async (event) => {
         };
     } catch (error) {
         console.error('Error processing image:', error);
-        
-        // Log error to CloudWatch
-        const cloudwatch = new AWS.CloudWatch();
-        await cloudwatch.putMetricData({
-            Namespace: 'Phoenix/ImageProcessor',
-            MetricData: [{
-                MetricName: 'ProcessingError',
-                Value: 1,
-                Unit: 'Count',
-                Dimensions: [{
-                    Name: 'Environment',
-                    Value: process.env.AWS_LAMBDA_FUNCTION_NAME.includes('-dev') ? 'development' : 'production'
-                }]
-            }]
-        }).promise();
-        
         return {
             statusCode: 500,
             body: JSON.stringify({
-                error: 'Error processing image',
-                message: error.message
+                message: 'Error processing image',
+                error: error.message
             })
         };
     }
