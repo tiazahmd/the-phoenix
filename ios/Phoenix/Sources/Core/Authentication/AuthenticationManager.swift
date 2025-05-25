@@ -77,6 +77,11 @@ class AuthenticationManager: ObservableObject {
             isAuthenticated = true
         }
     }
+    
+    // MARK: - Testing Helper
+    func forceLogout() {
+        handleLogout()
+    }
 }
 
 // MARK: - Data Models

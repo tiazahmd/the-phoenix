@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var authManager: AuthenticationManager
+    
     var body: some View {
         TabView {
             CheckInView()
@@ -29,6 +31,17 @@ struct ContentView: View {
                 }
         }
         .tint(.indigo)
+        .overlay(alignment: .topTrailing) {
+            Button("Logout") {
+                authManager.forceLogout()
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.red)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .padding()
+        }
     }
 }
 
