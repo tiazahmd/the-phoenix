@@ -3,13 +3,9 @@
   "version": "1.0.0",
   "description": "The Phoenix Project - AWS Lambda Functions",
   "private": true,
-  "workspaces": [
-    "lambda/*"
-  ],
   "scripts": {
-    "test": "npm run test --workspaces",
-    "lint": "eslint lambda/*/src/",
-    "lint:fix": "eslint lambda/*/src/ --fix"
+    "test": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
+    "lint": "cd lambda/image-processor && npm run lint && cd ../notification-handler && npm run lint"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
