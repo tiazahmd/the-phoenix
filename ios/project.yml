@@ -23,7 +23,8 @@ targets:
         excludes:
           - "Tests/**"
     resources:
-      - Phoenix/Sources/Core/Storage/Phoenix.xcdatamodeld
+      - path: Phoenix/Sources/Core/Storage/Phoenix.xcdatamodeld
+        type: folder
     settings:
       base:
         INFOPLIST_FILE: Phoenix/Configuration/Info.plist
