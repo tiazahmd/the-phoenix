@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "test": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
-    "lint": "eslint lambda/image-processor lambda/notification-handler"
+    "lint": "eslint lambda/*/src/**/*.js"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

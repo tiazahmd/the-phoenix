@@ -58,11 +58,12 @@ jobs:
       with:
         node-version: '20.x'
     
-    - name: Install dependencies
+    - name: Install root dependencies
+      run: npm ci
+    
+    - name: Install function dependencies
       working-directory: lambda/${{ matrix.function }}
-      run: |
-        npm ci
-        npm ls eslint eslint-config-airbnb-base eslint-plugin-import || true
+      run: npm ci
     
     - name: Run ESLint
       working-directory: lambda/${{ matrix.function }}
