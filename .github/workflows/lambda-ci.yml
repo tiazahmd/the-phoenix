@@ -28,20 +28,20 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Install root dependencies
-      run: npm install
+    - name: Install dependencies
+      run: npm ci
     
-    - name: Install Image Processor dependencies
-      working-directory: lambda/image-processor
-      run: |
-        npm ci
-        npm run test
-    
-    - name: Install Notification Handler dependencies
-      working-directory: lambda/notification-handler
-      run: |
-        npm ci
-        npm run test
+    - name: Run tests
+      run: npm test
+      
+    - name: Upload test coverage
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: |
+          lambda/*/coverage
+        retention-days: 14
 
   lint:
     runs-on: ubuntu-latest
@@ -54,14 +54,11 @@ jobs:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install root dependencies
-      run: npm install
+    - name: Install dependencies
+      run: npm ci
     
-    - name: Install and run ESLint
-      run: |
-        npm install eslint eslint-config-airbnb-base eslint-plugin-import --save-dev
-        npx eslint lambda/image-processor/
-        npx eslint lambda/notification-handler/
+    - name: Run ESLint
+      run: npm run lint
 
   security:
     needs: [test, lint]
@@ -69,9 +66,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/node@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --severity-threshold=high 
+        args: --severity-threshold=high
+        command: test 

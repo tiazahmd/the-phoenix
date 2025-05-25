@@ -8,6 +8,7 @@ yarn-error.log
 *.zip
 dist/
 build/
+coverage/
 
 # Environment variables
 .env
@@ -137,4 +138,13 @@ celerybeat.pid
 # Build
 build/
 dist/
-*.egg-info/ 
+*.egg-info/
+
+# AWS Lambda
+function.zip
+layer.zip
+*-policy.json
+*-permissions.json
+deploy-*.sh
+create-*.sh
+update-*.sh 

@@ -6,17 +6,17 @@ const sns = new AWS.SNS();
 
 exports.handler = async (event) => {
     console.log('Processing event:', JSON.stringify(event, null, 2));
-    
+
     try {
         const bucket = event.Records[0].s3.bucket.name;
         const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
-        
+
         console.log(`Processing image from bucket: ${bucket}, key: ${key}`);
 
         // Get the image from S3
         const inputImage = await s3.getObject({
             Bucket: bucket,
-            Key: key
+            Key: key,
         }).promise();
 
         console.log('Successfully retrieved image from S3');
@@ -25,7 +25,7 @@ exports.handler = async (event) => {
         const sizes = {
             thumbnail: { width: 150, height: 150 },
             medium: { width: 800, height: 800 },
-            large: { width: 1600, height: 1600 }
+            large: { width: 1600, height: 1600 },
         };
 
         const processedImages = await Promise.all(
@@ -34,22 +34,22 @@ exports.handler = async (event) => {
                 const processedBuffer = await sharp(inputImage.Body)
                     .resize(dimensions.width, dimensions.height, {
                         fit: 'inside',
-                        withoutEnlargement: true
+                        withoutEnlargement: true,
                     })
                     .toBuffer();
 
                 const targetKey = `${key.replace('uploads/', `${size}/`)}`;
-                
+
                 await s3.putObject({
                     Bucket: bucket,
                     Key: targetKey,
                     Body: processedBuffer,
-                    ContentType: 'image/jpeg'
+                    ContentType: 'image/jpeg',
                 }).promise();
 
                 console.log(`Successfully uploaded ${size} version to ${targetKey}`);
                 return { size, key: targetKey };
-            })
+            }),
         );
 
         // Send notification about processed images
@@ -58,8 +58,8 @@ exports.handler = async (event) => {
             message: {
                 originalKey: key,
                 processedVersions: processedImages,
-                timestamp: new Date().toISOString()
-            }
+                timestamp: new Date().toISOString(),
+            },
         };
 
         await sns.publish({
@@ -68,9 +68,9 @@ exports.handler = async (event) => {
             MessageAttributes: {
                 type: {
                     DataType: 'String',
-                    StringValue: 'IMAGE_PROCESSED'
-                }
-            }
+                    StringValue: 'IMAGE_PROCESSED',
+                },
+            },
         }).promise();
 
         console.log('Successfully published notification to SNS');
@@ -79,8 +79,8 @@ exports.handler = async (event) => {
             statusCode: 200,
             body: JSON.stringify({
                 message: 'Image processed successfully',
-                processedImages
-            })
+                processedImages,
+            }),
         };
     } catch (error) {
         console.error('Error processing image:', error);
@@ -88,8 +88,8 @@ exports.handler = async (event) => {
             statusCode: 500,
             body: JSON.stringify({
                 message: 'Error processing image',
-                error: error.message
-            })
+                error: error.message,
+            }),
         };
     }
-}; 
+};

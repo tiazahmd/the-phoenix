@@ -1,10 +1,10 @@
 const AWS = require('aws-sdk');
 const sharp = require('sharp');
-const { handler } = require('../index');
+const { handler } = require('../src/index');
 
 // Mock AWS SDK
-jest.mock('aws-sdk', () => ({
-    S3: jest.fn(() => ({
+jest.mock('aws-sdk', () => {
+    const mockS3Instance = {
         getObject: jest.fn().mockReturnValue({
             promise: jest.fn().mockResolvedValue({
                 Body: Buffer.from('fake-image-data'),
@@ -13,21 +13,44 @@ jest.mock('aws-sdk', () => ({
         putObject: jest.fn().mockReturnValue({
             promise: jest.fn().mockResolvedValue({}),
         }),
-    })),
-    SNS: jest.fn(() => ({
+    };
+
+    const mockSNSInstance = {
         publish: jest.fn().mockReturnValue({
-            promise: jest.fn().mockResolvedValue({}),
+            promise: jest.fn().mockResolvedValue({
+                MessageId: 'mock-message-id',
+            }),
         }),
-    })),
-}));
+    };
+
+    return {
+        S3: jest.fn(() => mockS3Instance),
+        SNS: jest.fn(() => mockSNSInstance),
+    };
+});
 
 // Mock sharp
-jest.mock('sharp', () => jest.fn(() => ({
+jest.mock('sharp', () => jest.fn().mockImplementation(() => ({
     resize: jest.fn().mockReturnThis(),
     toBuffer: jest.fn().mockResolvedValue(Buffer.from('processed-image')),
 })));
 
 describe('Image Processor Lambda', () => {
+    let mockS3;
+    let mockSNS;
+
+    beforeEach(() => {
+        // Clear all mocks
+        jest.clearAllMocks();
+
+        // Get mock instances
+        mockS3 = new AWS.S3();
+        mockSNS = new AWS.SNS();
+
+        // Set environment variables
+        process.env.SNS_TOPIC_ARN = 'mock-sns-topic-arn';
+    });
+
     const mockEvent = {
         Records: [{
             s3: {
@@ -37,38 +60,31 @@ describe('Image Processor Lambda', () => {
         }],
     };
 
-    beforeEach(() => {
-        // Clear all mocks before each test
-        jest.clearAllMocks();
-        process.env.SNS_TOPIC_ARN = 'mock-sns-topic-arn';
-    });
-
     test('processes image and creates thumbnails', async () => {
         const result = await handler(mockEvent);
-        
+
         // Verify S3 getObject was called
-        expect(AWS.S3).toHaveBeenCalled();
-        const s3Instance = AWS.S3.mock.results[0].value;
-        expect(s3Instance.getObject).toHaveBeenCalledWith({
+        expect(mockS3.getObject).toHaveBeenCalledWith({
             Bucket: 'phoenix-storage-dev',
             Key: 'uploads/test-image.jpg',
         });
 
         // Verify sharp processing
         expect(sharp).toHaveBeenCalledWith(Buffer.from('fake-image-data'));
-        const sharpInstance = sharp.mock.results[0].value;
-        expect(sharpInstance.resize).toHaveBeenCalled();
-        expect(sharpInstance.toBuffer).toHaveBeenCalled();
 
         // Verify S3 putObject was called for each size
-        expect(s3Instance.putObject).toHaveBeenCalledTimes(3); // thumbnail, medium, large
+        expect(mockS3.putObject).toHaveBeenCalledTimes(3);
 
         // Verify SNS notification was sent
-        expect(AWS.SNS).toHaveBeenCalled();
-        const snsInstance = AWS.SNS.mock.results[0].value;
-        expect(snsInstance.publish).toHaveBeenCalledWith({
+        expect(mockSNS.publish).toHaveBeenCalledWith({
             TopicArn: 'mock-sns-topic-arn',
             Message: expect.any(String),
+            MessageAttributes: {
+                type: {
+                    DataType: 'String',
+                    StringValue: 'IMAGE_PROCESSED',
+                },
+            },
         });
 
         // Verify successful response
@@ -80,8 +96,7 @@ describe('Image Processor Lambda', () => {
 
     test('handles errors gracefully', async () => {
         // Mock S3 getObject to throw an error
-        const s3Instance = AWS.S3.mock.results[0].value;
-        s3Instance.getObject.mockReturnValue({
+        mockS3.getObject.mockReturnValue({
             promise: jest.fn().mockRejectedValue(new Error('S3 Error')),
         });
 
@@ -92,4 +107,4 @@ describe('Image Processor Lambda', () => {
             body: expect.stringContaining('Error processing image'),
         });
     });
-}); 
+});

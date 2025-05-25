@@ -1,19 +1,19 @@
 {
   "name": "phoenix-notification-handler",
   "version": "1.0.0",
-  "description": "Notification handling Lambda function for Phoenix app",
-  "main": "index.js",
+  "description": "Lambda function for handling notifications",
+  "main": "src/index.js",
   "scripts": {
     "test": "jest --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "aws-sdk": "^2.1531.0"
+    "aws-sdk": "^2.1574.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.29.1"
   },

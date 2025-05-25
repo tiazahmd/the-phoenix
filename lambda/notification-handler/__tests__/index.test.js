@@ -1,121 +1,122 @@
 const AWS = require('aws-sdk');
-const { handler } = require('../index');
+
+// Import the handler
+const { handler } = require('../src/index');
 
 // Mock AWS SDK
-jest.mock('aws-sdk', () => ({
-    SNS: jest.fn(() => ({
-        publish: jest.fn().mockReturnValue({
-            promise: jest.fn().mockResolvedValue({}),
+jest.mock('aws-sdk', () => {
+    const mockSESInstance = {
+        sendEmail: jest.fn().mockReturnValue({
+            promise: jest.fn().mockResolvedValue({
+                MessageId: 'mock-message-id',
+            }),
         }),
-    })),
-}));
+    };
+
+    return {
+        SES: jest.fn(() => mockSESInstance),
+    };
+});
 
 describe('Notification Handler Lambda', () => {
-    const mockUserRegistrationEvent = {
-        body: JSON.stringify({
-            type: 'USER_REGISTRATION',
-            message: {
-                userId: '123',
-                email: 'test@example.com',
-                timestamp: '2024-01-20T12:00:00Z',
-            },
-        }),
-    };
-
-    const mockImageProcessedEvent = {
-        body: JSON.stringify({
-            type: 'IMAGE_PROCESSED',
-            message: {
-                imageId: '456',
-                userId: '123',
-                sizes: ['thumbnail', 'medium', 'large'],
-                timestamp: '2024-01-20T12:00:00Z',
-            },
-        }),
-    };
+    let mockSES;
 
     beforeEach(() => {
-        // Clear all mocks before each test
+        // Clear all mocks
         jest.clearAllMocks();
-        process.env.SNS_TOPIC_ARN = 'mock-sns-topic-arn';
+
+        // Get mock instance
+        mockSES = new AWS.SES();
+
+        // Set environment variables
+        process.env.SOURCE_EMAIL = 'test@example.com';
+        process.env.DESTINATION_EMAIL = 'admin@example.com';
     });
 
-    test('handles user registration notification', async () => {
-        const result = await handler(mockUserRegistrationEvent);
-
-        // Verify SNS was initialized
-        expect(AWS.SNS).toHaveBeenCalled();
-
-        // Verify SNS publish was called with correct parameters
-        const snsInstance = AWS.SNS.mock.results[0].value;
-        expect(snsInstance.publish).toHaveBeenCalledWith({
-            TopicArn: 'mock-sns-topic-arn',
-            Message: expect.stringContaining('USER_REGISTRATION'),
-            MessageAttributes: expect.objectContaining({
-                notificationType: {
-                    DataType: 'String',
-                    StringValue: 'USER_REGISTRATION',
+    const mockEvent = {
+        Records: [{
+            Sns: {
+                Message: JSON.stringify({
+                    bucket: 'phoenix-storage-dev',
+                    key: 'uploads/test-image.jpg',
+                    sizes: ['thumbnail', 'medium', 'large'],
+                }),
+                MessageAttributes: {
+                    type: {
+                        Value: 'IMAGE_PROCESSED',
+                    },
                 },
-            }),
+            },
+        }],
+    };
+
+    test('sends email notification successfully', async () => {
+        const result = await handler(mockEvent);
+
+        // Verify SES sendEmail was called
+        expect(mockSES.sendEmail).toHaveBeenCalledWith({
+            Source: 'test@example.com',
+            Destination: {
+                ToAddresses: ['admin@example.com'],
+            },
+            Message: {
+                Subject: {
+                    Data: 'Image Processing Complete',
+                },
+                Body: {
+                    Text: {
+                        Data: expect.stringContaining('phoenix-storage-dev'),
+                    },
+                },
+            },
         });
 
         // Verify successful response
         expect(result).toEqual({
             statusCode: 200,
-            body: expect.stringContaining('Notification processed successfully'),
+            body: expect.any(String),
         });
     });
 
-    test('handles image processed notification', async () => {
-        const result = await handler(mockImageProcessedEvent);
-
-        // Verify SNS publish was called with correct parameters
-        const snsInstance = AWS.SNS.mock.results[0].value;
-        expect(snsInstance.publish).toHaveBeenCalledWith({
-            TopicArn: 'mock-sns-topic-arn',
-            Message: expect.stringContaining('IMAGE_PROCESSED'),
-            MessageAttributes: expect.objectContaining({
-                notificationType: {
-                    DataType: 'String',
-                    StringValue: 'IMAGE_PROCESSED',
-                },
-            }),
+    test('handles errors gracefully', async () => {
+        // Mock SES sendEmail to throw an error
+        mockSES.sendEmail.mockReturnValue({
+            promise: jest.fn().mockRejectedValue(new Error('SES Error')),
         });
 
-        expect(result).toEqual({
-            statusCode: 200,
-            body: expect.stringContaining('Notification processed successfully'),
-        });
-    });
-
-    test('handles invalid notification structure', async () => {
-        const invalidEvent = {
-            body: JSON.stringify({
-                type: 'INVALID_TYPE',
-                // Missing message object
-            }),
-        };
-
-        const result = await handler(invalidEvent);
-
-        expect(result).toEqual({
-            statusCode: 400,
-            body: expect.stringContaining('Invalid notification structure'),
-        });
-    });
-
-    test('handles SNS publish errors', async () => {
-        // Mock SNS publish to throw an error
-        const snsInstance = AWS.SNS.mock.results[0].value;
-        snsInstance.publish.mockReturnValue({
-            promise: jest.fn().mockRejectedValue(new Error('SNS Error')),
-        });
-
-        const result = await handler(mockUserRegistrationEvent);
+        const result = await handler(mockEvent);
 
         expect(result).toEqual({
             statusCode: 500,
-            body: expect.stringContaining('Error processing notification'),
+            body: expect.stringContaining('Error sending notification'),
         });
     });
-}); 
+
+    test('handles unsupported message type', async () => {
+        const unsupportedEvent = {
+            Records: [{
+                Sns: {
+                    Message: JSON.stringify({
+                        bucket: 'phoenix-storage-dev',
+                        key: 'uploads/test-image.jpg',
+                    }),
+                    MessageAttributes: {
+                        type: {
+                            Value: 'UNSUPPORTED_TYPE',
+                        },
+                    },
+                },
+            }],
+        };
+
+        const result = await handler(unsupportedEvent);
+
+        expect(result).toEqual({
+            statusCode: 500,
+            body: expect.stringContaining('Unsupported message type'),
+        });
+
+        // Verify SES sendEmail was not called
+        expect(mockSES.sendEmail).not.toHaveBeenCalled();
+    });
+});
