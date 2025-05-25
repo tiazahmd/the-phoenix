@@ -95,21 +95,19 @@ jobs:
     
     - name: Run Snyk on image-processor
       uses: snyk/actions/node@master
-      working-directory: lambda/image-processor
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         command: test
-        args: --severity-threshold=high --file=package.json
+        args: --file=lambda/image-processor/package.json --severity-threshold=high
     
     - name: Run Snyk on notification-handler
       uses: snyk/actions/node@master
-      working-directory: lambda/notification-handler
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         command: test
-        args: --severity-threshold=high --file=package.json
+        args: --file=lambda/notification-handler/package.json --severity-threshold=high
 
   release:
     needs: [security]
