@@ -8,15 +8,19 @@
     "test:image-processor": "cd lambda/image-processor && npm test",
     "test:notification-handler": "cd lambda/notification-handler && npm test",
     "lint": "npm run lint:image-processor && npm run lint:notification-handler",
-    "lint:image-processor": "cd lambda/image-processor && npm run lint",
-    "lint:notification-handler": "cd lambda/notification-handler && npm run lint",
+    "lint:image-processor": "eslint lambda/image-processor/",
+    "lint:notification-handler": "eslint lambda/notification-handler/",
     "security": "npm audit && snyk test",
     "clean": "rm -rf node_modules && rm -rf lambda/*/node_modules && npm install",
     "prepare": "husky install"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
     "snyk": "^1.1280.0"
   },
   "lint-staged": {

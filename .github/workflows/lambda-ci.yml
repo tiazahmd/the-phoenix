@@ -29,22 +29,16 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: |
-          package-lock.json
-          lambda/${{ matrix.function }}/package-lock.json
     
     - name: Install dependencies
       working-directory: lambda/${{ matrix.function }}
-      run: npm install
+      run: |
+        npm install
+        npm test
     
-    - name: Run tests
-      working-directory: lambda/${{ matrix.function }}
-      run: npm test
-      
     - name: Upload test coverage
       uses: actions/upload-artifact@v4
-      if: always()
+      if: success()
       with:
         name: coverage-${{ matrix.function }}
         path: lambda/${{ matrix.function }}/coverage
@@ -52,10 +46,6 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        function: [image-processor, notification-handler]
-    
     steps:
     - uses: actions/checkout@v4
     
@@ -63,18 +53,15 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: |
-          package-lock.json
-          lambda/${{ matrix.function }}/package-lock.json
     
-    - name: Install dependencies
-      working-directory: lambda/${{ matrix.function }}
+    - name: Install root dependencies
       run: npm install
     
-    - name: Run ESLint
-      working-directory: lambda/${{ matrix.function }}
-      run: npm run lint
+    - name: Run ESLint on image-processor
+      run: npx eslint lambda/image-processor/
+    
+    - name: Run ESLint on notification-handler
+      run: npx eslint lambda/notification-handler/
 
   security:
     needs: [test, lint]
@@ -86,24 +73,29 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: |
-          package-lock.json
-          lambda/*/package-lock.json
     
     - name: Install dependencies
       run: |
         cd lambda/image-processor && npm install
         cd ../notification-handler && npm install
     
-    - name: Run Snyk to check for vulnerabilities
+    - name: Run Snyk on image-processor
       uses: snyk/actions/node@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --severity-threshold=high
         command: test
-        file: lambda/*/package.json
+        args: --severity-threshold=high
+        file: lambda/image-processor/package.json
+    
+    - name: Run Snyk on notification-handler
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        command: test
+        args: --severity-threshold=high
+        file: lambda/notification-handler/package.json
 
   release:
     needs: [security]
