@@ -3,23 +3,18 @@
   "version": "2.0.0",
   "description": "The Phoenix Project - A modern, serverless application",
   "private": true,
-  "workspaces": [
-    "lambda/*"
-  ],
   "scripts": {
-    "test": "npm run test:lambda && npm run test:integration",
-    "test:lambda": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
-    "test:integration": "cd tests && npm test",
-    "lint": "npm run lint:lambda",
-    "lint:lambda": "eslint lambda/*/src/**/*.js",
+    "test": "npm run test:image-processor && npm run test:notification-handler",
+    "test:image-processor": "cd lambda/image-processor && npm test",
+    "test:notification-handler": "cd lambda/notification-handler && npm test",
+    "lint": "npm run lint:image-processor && npm run lint:notification-handler",
+    "lint:image-processor": "cd lambda/image-processor && npm run lint",
+    "lint:notification-handler": "cd lambda/notification-handler && npm run lint",
     "security": "npm audit && snyk test",
-    "clean": "rm -rf node_modules && rm -rf lambda/*/node_modules && npm ci",
+    "clean": "rm -rf node_modules && rm -rf lambda/*/node_modules && npm install",
     "prepare": "husky install"
   },
   "devDependencies": {
-    "eslint": "^8.57.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.29.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "snyk": "^1.1280.0"
