@@ -50,11 +50,15 @@ struct QuizSessionView: View {
                     
                     VStack(spacing: 12) {
                         ForEach(Array(currentQuestion.options.enumerated()), id: \.offset) { index, option in
+                            let isSelected = selectedAnswer == index
+                            let isCorrect = showingResult ? index == currentQuestion.correctAnswer : nil
+                            let isWrong = showingResult && selectedAnswer == index && index != currentQuestion.correctAnswer
+                            
                             OptionButton(
                                 text: option,
-                                isSelected: selectedAnswer == index,
-                                isCorrect: showingResult ? index == currentQuestion.correctAnswer : nil,
-                                isWrong: showingResult && selectedAnswer == index && index != currentQuestion.correctAnswer
+                                isSelected: isSelected,
+                                isCorrect: isCorrect,
+                                isWrong: isWrong
                             ) {
                                 if !showingResult {
                                     selectedAnswer = index
@@ -80,9 +84,11 @@ struct QuizSessionView: View {
                                 .fontWeight(.semibold)
                         }
                         
-                        Text(currentQuestion.explanation)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
+                        if let explanation = currentQuestion.explanation {
+                            Text(explanation)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                        }
                         
                         Button {
                             showingTip = true
@@ -315,7 +321,7 @@ struct TipView: View {
 }
 
 #Preview {
-    QuizSessionView(quiz: Quiz.sample(for: .techTrivia)) {
+    QuizSessionView(quiz: Quiz.generateQuiz(for: .techTrivia)) {
         // Preview completion
     }
 } 

@@ -35,6 +35,7 @@ LOCAL_APPS = [
     'apps.dashboard',
     'apps.tips',
     'core.ai',
+    'core',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -110,6 +111,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+
+# Override the default session authentication for personal project
+REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = [
+    'core.authentication.CsrfExemptSessionAuthentication',
+]
 
 # CORS settings (Simplified for local development)
 CORS_ALLOW_CREDENTIALS = True

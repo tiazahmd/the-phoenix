@@ -11,9 +11,18 @@ struct PhoenixApp: App {
                 if authManager.isAuthenticated {
                     ContentView()
                         .environment(\.managedObjectContext, coreDataStack.context)
+                        .onAppear {
+                            print("📱 Showing ContentView - User is authenticated")
+                        }
                 } else {
                     LoginView()
+                        .onAppear {
+                            print("🔐 Showing LoginView - User not authenticated")
+                        }
                 }
+            }
+            .onChange(of: authManager.isAuthenticated) { oldValue, newValue in
+                print("🔄 Authentication state changed: \(oldValue) → \(newValue)")
             }
             .environmentObject(authManager)
             .environmentObject(coreDataStack)

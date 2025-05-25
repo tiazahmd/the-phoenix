@@ -1,85 +1,131 @@
 import SwiftUI
 
 struct TipsView: View {
-    @State private var tips: [Tip] = sampleTips
-    @State private var isLoading = false
     @State private var selectedCategory: TipCategory = .all
+    @State private var searchText = ""
+    @State private var tips: [Tip] = []
+    @State private var isLoading = false
+    @State private var animateCards = false
+    
+    private let categories = TipCategory.allCases
     
     var filteredTips: [Tip] {
-        if selectedCategory == .all {
-            return tips
+        var filtered = tips
+        
+        if selectedCategory != .all {
+            filtered = filtered.filter { $0.category == selectedCategory }
         }
-        return tips.filter { $0.category == selectedCategory }
+        
+        if !searchText.isEmpty {
+            filtered = filtered.filter { tip in
+                tip.title.localizedCaseInsensitiveContains(searchText) ||
+                tip.content.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+        
+        return filtered
     }
     
     var body: some View {
-        NavigationStack {
+        ZStack {
+            Color.phoenixBackground.ignoresSafeArea()
+            
             VStack(spacing: 0) {
+                // Header
+                VStack(spacing: Spacing.lg) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            Text("Recovery Tips")
+                                .font(.phoenixTitle2)
+                                .foregroundColor(.phoenixTextPrimary)
+                            
+                            Text("Wisdom for your journey")
+                                .font(.phoenixBody)
+                                .foregroundColor(.phoenixTextSecondary)
+                        }
+                        
+                        Spacer()
+                        
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.phoenixPrimaryLight, .phoenixPrimary],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 50, height: 50)
+                            
+                            Image(systemName: "lightbulb.fill")
+                                .font(.title3)
+                                .foregroundColor(.white)
+                        }
+                    }
+                    
+                    // Search Bar
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.phoenixTextTertiary)
+                        
+                        TextField("Search tips...", text: $searchText)
+                            .font(.phoenixBody)
+                    }
+                    .padding(Spacing.md)
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .fill(Color.phoenixSurfaceLight)
+                    )
+                }
+                .padding(.horizontal, Spacing.lg)
+                .padding(.top, Spacing.md)
+                
                 // Category Filter
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(TipCategory.allCases) { category in
+                    HStack(spacing: Spacing.md) {
+                        ForEach(categories, id: \.self) { category in
                             CategoryFilterButton(
                                 category: category,
                                 isSelected: selectedCategory == category
                             ) {
-                                selectedCategory = category
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    selectedCategory = category
+                                }
                             }
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, Spacing.lg)
                 }
-                .padding(.vertical, 8)
-                .background(Color(.systemBackground))
+                .padding(.vertical, Spacing.md)
                 
-                // Tips List
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        ForEach(filteredTips) { tip in
-                            TipCard(tip: tip)
-                                .onAppear {
-                                    if tip.id == filteredTips.last?.id {
-                                        loadMoreTips()
-                                    }
-                                }
-                        }
-                        
-                        if isLoading {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        }
-                    }
-                    .padding()
+                // Tips Content
+                if isLoading {
+                    LoadingView()
+                } else if filteredTips.isEmpty {
+                    EmptyTipsView(searchText: searchText, selectedCategory: selectedCategory)
+                } else {
+                    TipsListView(tips: filteredTips, animateCards: animateCards)
                 }
-                .background(Color(.systemGroupedBackground))
+                
+                Spacer(minLength: 100)
             }
-            .navigationTitle("Tips")
-            .refreshable {
-                await refreshTips()
+        }
+        .onAppear {
+            loadTips()
+            withAnimation(.easeInOut(duration: 0.8).delay(0.3)) {
+                animateCards = true
             }
         }
     }
     
-    private func loadMoreTips() {
-        guard !isLoading else { return }
-        
+    private func loadTips() {
         isLoading = true
         
-        // TODO: Implement API call to GET /tips?after_id=...
-        // Simulate API delay
+        // Simulate API call - replace with actual API call
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let newTips = Tip.generateMoreTips()
-            tips.append(contentsOf: newTips)
+            tips = Tip.sampleTips
             isLoading = false
         }
-    }
-    
-    private func refreshTips() async {
-        // TODO: Implement API call to refresh tips
-        // Simulate API delay
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-        tips = sampleTips
     }
 }
 
@@ -88,237 +134,375 @@ struct CategoryFilterButton: View {
     let isSelected: Bool
     let action: () -> Void
     
+    @State private var isPressed = false
+    
     var body: some View {
         Button(action: action) {
-            Text(category.title)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? .indigo : .clear)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule()
-                        .strokeBorder(isSelected ? .clear : .secondary.opacity(0.3))
-                )
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: category.icon)
+                    .font(.caption)
+                    .foregroundColor(isSelected ? .white : category.color)
+                
+                Text(category.title)
+                    .font(.phoenixBodySecondary)
+                    .foregroundColor(isSelected ? .white : category.color)
+                    .fontWeight(isSelected ? .semibold : .medium)
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: CornerRadius.pill)
+                    .fill(isSelected ? category.color : category.color.opacity(0.1))
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = pressing
+            }
+        }, perform: {})
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isSelected)
+    }
+}
+
+struct LoadingView: View {
+    var body: some View {
+        VStack(spacing: Spacing.lg) {
+            ProgressView()
+                .scaleEffect(1.5)
+                .tint(.phoenixPrimary)
+            
+            Text("Loading tips...")
+                .font(.phoenixBody)
+                .foregroundColor(.phoenixTextSecondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct EmptyTipsView: View {
+    let searchText: String
+    let selectedCategory: TipCategory
+    
+    var body: some View {
+        VStack(spacing: Spacing.lg) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 60))
+                .foregroundColor(.phoenixTextTertiary)
+            
+            VStack(spacing: Spacing.sm) {
+                Text("No tips found")
+                    .font(.phoenixHeadline)
+                    .foregroundColor(.phoenixTextPrimary)
+                
+                if !searchText.isEmpty {
+                    Text("Try adjusting your search or browse different categories")
+                        .font(.phoenixBody)
+                        .foregroundColor(.phoenixTextSecondary)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text("No tips available in this category yet")
+                        .font(.phoenixBody)
+                        .foregroundColor(.phoenixTextSecondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+        }
+        .padding(.horizontal, Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct TipsListView: View {
+    let tips: [Tip]
+    let animateCards: Bool
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: Spacing.lg) {
+                ForEach(Array(tips.enumerated()), id: \.element.id) { index, tip in
+                    TipCard(tip: tip)
+                        .opacity(animateCards ? 1.0 : 0.0)
+                        .offset(y: animateCards ? 0 : 50)
+                        .animation(
+                            .spring(response: 0.6, dampingFraction: 0.8)
+                            .delay(Double(index) * 0.1),
+                            value: animateCards
+                        )
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.md)
         }
     }
 }
 
 struct TipCard: View {
     let tip: Tip
+    @State private var isExpanded = false
     @State private var isBookmarked = false
+    @State private var isPressed = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(tip.category.title)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(tip.category.color)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(tip.category.color.opacity(0.2))
-                        .clipShape(Capsule())
+        PhoenixCard {
+            VStack(spacing: Spacing.md) {
+                // Header
+                HStack(spacing: Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(tip.category.color.opacity(0.2))
+                            .frame(width: 50, height: 50)
+                        
+                        Image(systemName: tip.category.icon)
+                            .font(.title3)
+                            .foregroundColor(tip.category.color)
+                    }
                     
-                    Text(tip.title)
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text(tip.title)
+                            .font(.phoenixHeadline)
+                            .foregroundColor(.phoenixTextPrimary)
+                            .fontWeight(.semibold)
+                            .multilineTextAlignment(.leading)
+                        
+                        Text(tip.category.title)
+                            .font(.phoenixCaption)
+                            .foregroundColor(tip.category.color)
+                            .fontWeight(.medium)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        isBookmarked.toggle()
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                        impactFeedback.impactOccurred()
+                    }) {
+                        Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
+                            .font(.title3)
+                            .foregroundColor(isBookmarked ? .phoenixWarning : .phoenixTextTertiary)
+                    }
                 }
                 
-                Spacer()
-                
-                Button {
-                    isBookmarked.toggle()
-                } label: {
-                    Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
-                        .foregroundStyle(.indigo)
-                }
-            }
-            
-            // Content
-            Text(tip.content)
-                .font(.body)
-                .lineLimit(nil)
-            
-            // Action Steps (if any)
-            if !tip.actionSteps.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Try this:")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.indigo)
+                // Content
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    Text(tip.content)
+                        .font(.phoenixBody)
+                        .foregroundColor(.phoenixTextPrimary)
+                        .lineLimit(isExpanded ? nil : 3)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    ForEach(Array(tip.actionSteps.enumerated()), id: \.offset) { index, step in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("\(index + 1).")
-                                .font(.subheadline)
+                    if tip.content.count > 150 {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isExpanded.toggle()
+                            }
+                        }) {
+                            Text(isExpanded ? "Show less" : "Read more")
+                                .font(.phoenixBodySecondary)
+                                .foregroundColor(.phoenixPrimary)
                                 .fontWeight(.medium)
-                                .foregroundStyle(.indigo)
+                        }
+                    }
+                    
+                    // Action buttons (if tip is actionable)
+                    if tip.isActionable {
+                        HStack(spacing: Spacing.md) {
+                            PhoenixButton(
+                                title: "Try This",
+                                action: {
+                                    // TODO: Implement tip action
+                                    let notificationFeedback = UINotificationFeedbackGenerator()
+                                    notificationFeedback.notificationOccurred(.success)
+                                },
+                                style: .primary,
+                                size: .small
+                            )
                             
-                            Text(step)
-                                .font(.subheadline)
+                            PhoenixButton(
+                                title: "Share",
+                                action: {
+                                    // TODO: Implement sharing
+                                },
+                                style: .secondary,
+                                size: .small
+                            )
                         }
                     }
                 }
-                .padding()
-                .background(.indigo.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-            
-            // Footer
-            HStack {
-                Text(tip.source)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
                 
-                Spacer()
-                
-                Text(tip.readTime)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                // Footer with engagement
+                HStack {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "heart.fill")
+                            .font(.caption)
+                            .foregroundColor(.phoenixDanger)
+                        Text("\(tip.likes)")
+                            .font(.phoenixCaption)
+                            .foregroundColor(.phoenixTextSecondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Text(tip.createdAt, style: .relative)
+                        .font(.phoenixCaption)
+                        .foregroundColor(.phoenixTextTertiary)
+                }
             }
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(radius: 2)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = pressing
+            }
+        }, perform: {})
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isExpanded)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isBookmarked)
     }
 }
 
-// MARK: - Models
+// MARK: - Supporting Types
 
-enum TipCategory: String, CaseIterable, Identifiable {
+enum TipCategory: String, CaseIterable {
     case all = "all"
-    case urgeManagement = "urge_management"
     case mindfulness = "mindfulness"
-    case habits = "habits"
+    case coping = "coping"
     case motivation = "motivation"
-    case science = "science"
-    case community = "community"
-    
-    var id: String { rawValue }
+    case health = "health"
+    case relationships = "relationships"
+    case emergency = "emergency"
     
     var title: String {
         switch self {
         case .all: return "All"
-        case .urgeManagement: return "Urge Management"
         case .mindfulness: return "Mindfulness"
-        case .habits: return "Habits"
+        case .coping: return "Coping"
         case .motivation: return "Motivation"
-        case .science: return "Science"
-        case .community: return "Community"
+        case .health: return "Health"
+        case .relationships: return "Relationships"
+        case .emergency: return "Emergency"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .all: return "square.grid.2x2"
+        case .mindfulness: return "brain.head.profile"
+        case .coping: return "shield.lefthalf.filled"
+        case .motivation: return "star.fill"
+        case .health: return "heart.fill"
+        case .relationships: return "person.2.fill"
+        case .emergency: return "exclamationmark.triangle.fill"
         }
     }
     
     var color: Color {
         switch self {
-        case .all: return .gray
-        case .urgeManagement: return .red
-        case .mindfulness: return .green
-        case .habits: return .blue
-        case .motivation: return .orange
-        case .science: return .purple
-        case .community: return .pink
+        case .all: return .phoenixTextSecondary
+        case .mindfulness: return .phoenixPrimary
+        case .coping: return .phoenixSuccess
+        case .motivation: return .phoenixWarning
+        case .health: return .phoenixDanger
+        case .relationships: return .phoenixPrimaryLight
+        case .emergency: return .phoenixDanger
         }
     }
 }
 
-struct Tip: Identifiable {
+struct Tip: Identifiable, Hashable {
     let id = UUID()
     let title: String
     let content: String
     let category: TipCategory
-    let actionSteps: [String]
-    let source: String
-    let readTime: String
+    let isActionable: Bool
+    let likes: Int
+    let createdAt: Date
     
-    static func generateMoreTips() -> [Tip] {
-        return [
-            Tip(
-                title: "The 5-4-3-2-1 Grounding Technique",
-                content: "When you feel overwhelmed by urges, use this sensory grounding technique to bring yourself back to the present moment.",
-                category: .urgeManagement,
-                actionSteps: [
-                    "Name 5 things you can see",
-                    "Name 4 things you can touch",
-                    "Name 3 things you can hear",
-                    "Name 2 things you can smell",
-                    "Name 1 thing you can taste"
-                ],
-                source: "Mindfulness Research",
-                readTime: "2 min read"
-            ),
-            Tip(
-                title: "Understanding Your Trigger Patterns",
-                content: "Recovery isn't just about willpower—it's about understanding the science behind your habits and triggers.",
-                category: .science,
-                actionSteps: [
-                    "Keep a trigger journal for one week",
-                    "Note the time, place, and emotions",
-                    "Look for patterns in your data",
-                    "Plan alternative responses"
-                ],
-                source: "Behavioral Psychology",
-                readTime: "3 min read"
-            )
-        ]
-    }
+    static let sampleTips: [Tip] = [
+        Tip(
+            title: "The 5-4-3-2-1 Grounding Technique",
+            content: "When feeling overwhelmed, try this: Name 5 things you can see, 4 things you can touch, " +
+                    "3 things you can hear, 2 things you can smell, and 1 thing you can taste. " +
+                    "This helps bring you back to the present moment and reduces anxiety.",
+            category: .mindfulness,
+            isActionable: true,
+            likes: 127,
+            createdAt: Date().addingTimeInterval(-3_600)
+        ),
+        Tip(
+            title: "Create a Recovery Playlist",
+            content: "Music can be incredibly powerful for mood regulation. Create a playlist of songs that " +
+                    "motivate you, calm you down, or remind you of your goals. Having this ready can be a " +
+                    "quick way to shift your emotional state when needed.",
+            category: .coping,
+            isActionable: true,
+            likes: 89,
+            createdAt: Date().addingTimeInterval(-7_200)
+        ),
+        Tip(
+            title: "The Power of Small Wins",
+            content: "Recovery isn't just about avoiding setbacks—it's about celebrating progress. " +
+                    "Keep a list of small daily victories, like choosing a healthy meal, calling a friend, " +
+                    "or completing a task. These add up to create momentum and confidence.",
+            category: .motivation,
+            isActionable: true,
+            likes: 156,
+            createdAt: Date().addingTimeInterval(-10_800)
+        ),
+        Tip(
+            title: "Hydration and Recovery",
+            content: "Staying properly hydrated supports both physical and mental health. " +
+                    "Dehydration can worsen anxiety, depression, and cravings. Aim for 8 glasses of water daily, " +
+                    "and consider adding electrolytes if you're active.",
+            category: .health,
+            isActionable: true,
+            likes: 73,
+            createdAt: Date().addingTimeInterval(-14_400)
+        ),
+        Tip(
+            title: "Setting Boundaries with Triggers",
+            content: "It's okay to limit contact with people, places, or situations that threaten your recovery. " +
+                    "This isn't being antisocial—it's being protective of your progress. " +
+                    "Communicate your needs clearly and don't feel guilty about prioritizing your health.",
+            category: .relationships,
+            isActionable: false,
+            likes: 201,
+            createdAt: Date().addingTimeInterval(-18_000)
+        ),
+        Tip(
+            title: "Emergency Contact Protocol",
+            content: "Have a clear plan for crisis moments: 1) Remove yourself from immediate triggers, " +
+                    "2) Call your support person or therapist, 3) Use grounding techniques, " +
+                    "4) If in immediate danger, call emergency services. Practice this plan when you're feeling stable.",
+            category: .emergency,
+            isActionable: true,
+            likes: 312,
+            createdAt: Date().addingTimeInterval(-21_600)
+        ),
+        Tip(
+            title: "Morning Intention Setting",
+            content: "Start each day by setting a simple intention. It could be 'I will be kind to myself today' " +
+                    "or 'I will take things one moment at a time.' This creates a positive framework for " +
+                    "decision-making throughout the day.",
+            category: .mindfulness,
+            isActionable: true,
+            likes: 94,
+            createdAt: Date().addingTimeInterval(-25_200)
+        ),
+        Tip(
+            title: "The HALT Check",
+            content: "When feeling triggered, ask yourself: Am I Hungry, Angry, Lonely, or Tired? " +
+                    "Often, addressing these basic needs can significantly reduce urges and improve your emotional state. " +
+                    "Keep healthy snacks, have a support contact ready, and prioritize sleep.",
+            category: .coping,
+            isActionable: true,
+            likes: 178,
+            createdAt: Date().addingTimeInterval(-28_800)
+        )
+    ]
 }
-
-// Sample data
-let sampleTips = [
-    Tip(
-        title: "The Power of the Pause",
-        content: "When you feel an urge, try pausing for just 10 seconds. This brief moment can be enough to break the automatic response and give you space to choose differently.",
-        category: .urgeManagement,
-        actionSteps: [
-            "Feel the urge without acting",
-            "Take 3 deep breaths",
-            "Ask yourself: 'What do I really need right now?'",
-            "Choose a healthy alternative"
-        ],
-        source: "Cognitive Behavioral Therapy",
-        readTime: "2 min read"
-    ),
-    Tip(
-        title: "Building Your Recovery Toolkit",
-        content: "Having a variety of coping strategies ready makes you more resilient. Think of it like having different tools for different situations.",
-        category: .habits,
-        actionSteps: [
-            "List 5 activities that bring you joy",
-            "Identify 3 people you can call for support",
-            "Practice one mindfulness technique daily",
-            "Create a calming environment at home"
-        ],
-        source: "Recovery Specialists",
-        readTime: "3 min read"
-    ),
-    Tip(
-        title: "The Neuroscience of Habit Change",
-        content: "Your brain is constantly rewiring itself. Every time you choose recovery over relapse, you're strengthening new neural pathways and weakening old ones.",
-        category: .science,
-        actionSteps: [],
-        source: "Neuroscience Research",
-        readTime: "4 min read"
-    ),
-    Tip(
-        title: "Morning Mindfulness Routine",
-        content: "Starting your day with intention can set a positive tone and increase your resilience to triggers throughout the day.",
-        category: .mindfulness,
-        actionSteps: [
-            "Wake up 10 minutes earlier",
-            "Practice 5 minutes of deep breathing",
-            "Set one positive intention for the day",
-            "Express gratitude for three things"
-        ],
-        source: "Mindfulness Practice",
-        readTime: "2 min read"
-    )
-]
 
 #Preview {
     TipsView()

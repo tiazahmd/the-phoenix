@@ -17,6 +17,7 @@ class AuthenticationManager: ObservableObject {
     }
     
     func login(username: String, password: String) {
+        print("🔐 Starting login for username: \(username)")
         isLoading = true
         errorMessage = nil
         
@@ -26,12 +27,20 @@ class AuthenticationManager: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
+                    print("🔄 Login completion received")
                     self?.isLoading = false
                     if case .failure(let error) = completion {
-                        self?.errorMessage = error.localizedDescription
+                        print("❌ Login error: \(error)")
+                        if let decodingError = error as? DecodingError {
+                            print("❌ Decoding error details: \(decodingError)")
+                            self?.errorMessage = "Invalid response format: \(decodingError.localizedDescription)"
+                        } else {
+                            self?.errorMessage = error.localizedDescription
+                        }
                     }
                 },
                 receiveValue: { [weak self] response in
+                    print("✅ Login response received successfully")
                     self?.handleLoginSuccess(response)
                 }
             )
@@ -51,12 +60,32 @@ class AuthenticationManager: ObservableObject {
     }
     
     private func handleLoginSuccess(_ response: LoginResponse) {
-        currentUser = response.user
-        isAuthenticated = true
+        print("🎉 Login successful! Setting isAuthenticated = true")
+        
+        // Convert UserResponse to User for local storage
+        let user = User(
+            id: UUID(uuidString: response.user.id) ?? UUID(), // Use server UUID or generate new one
+            username: response.user.username,
+            email: response.user.email,
+            firstName: response.user.firstName,
+            lastName: response.user.lastName,
+            avatar: response.user.avatar,
+            bio: response.user.bio,
+            dateOfBirth: response.user.dateOfBirth,
+            timezone: response.user.timezone,
+            notificationPreferences: response.user.notificationPreferences?.mapValues { $0.value as? String ?? "" },
+            profile: response.user.profile?.progressPoints.description
+        )
+        
+        self.currentUser = user
+        self.isAuthenticated = true
+        print("✅ isAuthenticated set to: \(self.isAuthenticated)")
+        print("✅ currentUser set to: \(user.username)")
         
         // Store session for persistence
         UserDefaults.standard.set(true, forKey: "isLoggedIn")
-        UserDefaults.standard.set(response.user.id.uuidString, forKey: "userId")
+        UserDefaults.standard.set(user.id.uuidString, forKey: "userId")
+        UserDefaults.standard.set(response.user.id, forKey: "serverUserId") // Store server ID separately
     }
     
     private func handleLogout() {
@@ -85,16 +114,6 @@ class AuthenticationManager: ObservableObject {
 }
 
 // MARK: - Data Models
-
-struct LoginRequest: Codable {
-    let username: String
-    let password: String
-}
-
-struct LoginResponse: Codable {
-    let user: User
-    let message: String
-}
 
 struct User: Codable, Identifiable {
     let id: UUID

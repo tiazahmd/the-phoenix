@@ -1,176 +1,75 @@
 import SwiftUI
 
 struct QuizView: View {
-    @State private var selectedDomain: InterestDomain = .techTrivia
+    @State private var selectedDomain: InterestDomain?
     @State private var currentQuiz: Quiz?
-    @State private var showingQuiz = false
-    @State private var isLoading = false
+    @State private var currentQuestionIndex = 0
+    @State private var selectedAnswer: String?
+    @State private var showingResult = false
+    @State private var isCorrect = false
+    @State private var score = 0
+    @State private var animateProgress = false
+    @State private var showingDomainSelection = true
+    
+    private let domains = InterestDomain.allCases
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Text("Daily Quiz")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Text("Challenge yourself with personalized questions")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
+        ZStack {
+            Color.phoenixBackground.ignoresSafeArea()
+            
+            if showingDomainSelection {
+                DomainSelectionView(
+                    domains: domains,
+                    onDomainSelected: { domain in
+                        selectedDomain = domain
+                        startQuiz(for: domain)
                     }
-                    .padding(.top)
-                    
-                    // Domain Selection
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Choose Your Interest")
-                            .font(.headline)
-                        
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 12) {
-                            ForEach(InterestDomain.allCases) { domain in
-                                DomainCard(
-                                    domain: domain,
-                                    isSelected: selectedDomain == domain
-                                ) {
-                                    selectedDomain = domain
-                                }
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(radius: 2)
-                    
-                    // Start Quiz Button
-                    Button {
-                        startQuiz()
-                    } label: {
-                        HStack {
-                            if isLoading {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                    .tint(.white)
-                            } else {
-                                Image(systemName: "play.circle.fill")
-                            }
-                            Text(isLoading ? "Generating Quiz..." : "Start Quiz")
-                        }
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(.indigo)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .disabled(isLoading)
-                    
-                    // Recent Quiz History
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Recent Quizzes")
-                            .font(.headline)
-                        
-                        ForEach(sampleQuizHistory) { history in
-                            QuizHistoryRow(history: history)
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(radius: 2)
-                }
-                .padding()
-            }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Quiz")
-            .sheet(isPresented: $showingQuiz) {
-                if let quiz = currentQuiz {
-                    QuizSessionView(quiz: quiz) {
-                        showingQuiz = false
+                )
+                .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+            } else if let quiz = currentQuiz {
+                QuizGameView(
+                    quiz: quiz,
+                    currentQuestionIndex: $currentQuestionIndex,
+                    selectedAnswer: $selectedAnswer,
+                    showingResult: $showingResult,
+                    isCorrect: $isCorrect,
+                    score: $score,
+                    animateProgress: $animateProgress,
+                    onQuizComplete: {
+                        // Reset for next quiz
+                        showingDomainSelection = true
                         currentQuiz = nil
+                        currentQuestionIndex = 0
+                        score = 0
+                    },
+                    onBackToDomains: {
+                        showingDomainSelection = true
+                        currentQuiz = nil
+                        currentQuestionIndex = 0
+                        score = 0
                     }
-                }
+                )
+                .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: showingDomainSelection)
     }
     
-    private func startQuiz() {
-        isLoading = true
+    private func startQuiz(for domain: InterestDomain) {
+        currentQuiz = Quiz.generateQuiz(for: domain)
+        showingDomainSelection = false
         
-        // TODO: Implement API call to POST /quizzes
-        // Simulate API delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            currentQuiz = Quiz.sample(for: selectedDomain)
-            isLoading = false
-            showingQuiz = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.easeInOut(duration: 1.0)) {
+                animateProgress = true
+            }
         }
     }
 }
 
-struct DomainCard: View {
-    let domain: InterestDomain
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Text(domain.emoji)
-                    .font(.title)
-                
-                Text(domain.title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(isSelected ? .indigo.opacity(0.2) : Color(.systemGray6))
-            .foregroundStyle(isSelected ? .indigo : .primary)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(isSelected ? .indigo : .clear, lineWidth: 2)
-            )
-        }
-    }
-}
-
-struct QuizHistoryRow: View {
-    let history: QuizHistory
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(history.domain.title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                Text("\(history.correctAnswers)/\(history.totalQuestions) correct")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-            Spacer()
-            
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(history.date, style: .date)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                Text("\(Int(history.accuracy * 100))%")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundStyle(history.accuracy > 0.7 ? .green : .orange)
-            }
-        }
-        .padding(.vertical, 4)
-    }
+#Preview {
+    QuizView()
+        .environmentObject(AuthenticationManager())
 }
 
 // MARK: - Models
@@ -221,6 +120,46 @@ enum InterestDomain: String, CaseIterable, Identifiable {
         case .harryPotter: return "⚡"
         }
     }
+    
+    var color: Color {
+        switch self {
+        case .rdr2: return .rdr2
+        case .cyberpunk: return .cyberpunk
+        case .ghostOfTsushima: return .ghostOfTsushima
+        case .footballManager: return .footballManager
+        case .techTrivia: return .techTrivia
+        case .realMadrid: return .realMadrid
+        case .historicalEvents: return .historicalEvents
+        case .sciFi: return .sciFi
+        case .sherlockHolmes: return .sherlockHolmes
+        case .guitarBasics: return .guitarBasics
+        case .harryPotter: return .harryPotter
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .rdr2: return "🤠"
+        case .cyberpunk: return "🤖"
+        case .ghostOfTsushima: return "⚔️"
+        case .footballManager: return "⚽"
+        case .techTrivia: return "💻"
+        case .realMadrid: return "👑"
+        case .historicalEvents: return "📚"
+        case .sciFi: return "🚀"
+        case .sherlockHolmes: return "🔍"
+        case .guitarBasics: return "🎸"
+        case .harryPotter: return "⚡"
+        }
+    }
+    
+    var displayName: String {
+        title
+    }
+    
+    var description: String {
+        emoji
+    }
 }
 
 struct Quiz: Identifiable {
@@ -228,7 +167,7 @@ struct Quiz: Identifiable {
     let domain: InterestDomain
     let questions: [QuizQuestion]
     
-    static func sample(for domain: InterestDomain) -> Quiz {
+    static func generateQuiz(for domain: InterestDomain) -> Quiz {
         Quiz(domain: domain, questions: QuizQuestion.sampleQuestions(for: domain))
     }
 }
@@ -238,7 +177,7 @@ struct QuizQuestion: Identifiable {
     let question: String
     let options: [String]
     let correctAnswer: Int
-    let explanation: String
+    let explanation: String?
     let tip: String
     
     static func sampleQuestions(for domain: InterestDomain) -> [QuizQuestion] {
@@ -296,6 +235,153 @@ let sampleQuizHistory = [
     QuizHistory(domain: .realMadrid, date: Date().addingTimeInterval(-172800), totalQuestions: 4, correctAnswers: 4)
 ]
 
-#Preview {
-    QuizView()
-} 
+// MARK: - Supporting Views
+
+struct DomainSelectionView: View {
+    let domains: [InterestDomain]
+    let onDomainSelected: (InterestDomain) -> Void
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Spacing.xl) {
+                VStack(spacing: Spacing.lg) {
+                    Text("🧠")
+                        .font(.system(size: 80))
+                    
+                    VStack(spacing: Spacing.sm) {
+                        Text("Choose Your Challenge")
+                            .font(.phoenixTitle2)
+                            .foregroundColor(.phoenixTextPrimary)
+                        
+                        Text("Select a topic to test your knowledge")
+                            .font(.phoenixBody)
+                            .foregroundColor(.phoenixTextSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.top, Spacing.lg)
+                
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: Spacing.lg) {
+                    ForEach(domains) { domain in
+                        DomainCard(domain: domain) {
+                            onDomainSelected(domain)
+                        }
+                    }
+                }
+                .padding(.horizontal, Spacing.lg)
+                
+                Spacer(minLength: 100)
+            }
+            .padding(.vertical, Spacing.md)
+        }
+        .background(Color.phoenixBackground)
+    }
+}
+
+struct DomainCard: View {
+    let domain: InterestDomain
+    let action: () -> Void
+    
+    @State private var isPressed = false
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: Spacing.md) {
+                Text(domain.emoji)
+                    .font(.system(size: 50))
+                
+                VStack(spacing: Spacing.xs) {
+                    Text(domain.title)
+                        .font(.phoenixHeadline)
+                        .foregroundColor(.phoenixTextPrimary)
+                        .fontWeight(.semibold)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+            }
+            .padding(Spacing.lg)
+            .frame(height: 140)
+            .background(
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
+                    .fill(Color.phoenixCardBackground)
+                    .shadow(color: domain.color.opacity(0.2), radius: 8, x: 0, y: 4)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
+                    .stroke(domain.color.opacity(0.3), lineWidth: 2)
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = pressing
+            }
+        }, perform: {})
+    }
+}
+
+struct QuizGameView: View {
+    let quiz: Quiz
+    @Binding var currentQuestionIndex: Int
+    @Binding var selectedAnswer: String?
+    @Binding var showingResult: Bool
+    @Binding var isCorrect: Bool
+    @Binding var score: Int
+    @Binding var animateProgress: Bool
+    let onQuizComplete: () -> Void
+    let onBackToDomains: () -> Void
+    
+    var body: some View {
+        VStack(spacing: Spacing.xl) {
+            // Header
+            HStack {
+                Button(action: onBackToDomains) {
+                    Image(systemName: "chevron.left")
+                        .font(.title3)
+                        .foregroundColor(.phoenixPrimary)
+                }
+                
+                Spacer()
+                
+                Text(quiz.domain.title)
+                    .font(.phoenixHeadline)
+                    .foregroundColor(.phoenixTextPrimary)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Text("\(score)/\(quiz.questions.count)")
+                    .font(.phoenixBodySecondary)
+                    .foregroundColor(.phoenixTextSecondary)
+            }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.top, Spacing.md)
+            
+            // Quiz Content
+            VStack(spacing: Spacing.xl) {
+                Text("Quiz Game Placeholder")
+                    .font(.phoenixTitle2)
+                    .foregroundColor(.phoenixTextPrimary)
+                    .padding()
+                
+                Text("Question \(currentQuestionIndex + 1) of \(quiz.questions.count)")
+                    .font(.phoenixBody)
+                    .foregroundColor(.phoenixTextSecondary)
+                
+                PhoenixButton(
+                    title: "Complete Quiz",
+                    action: onQuizComplete,
+                    style: .primary
+                )
+                .padding(.horizontal, Spacing.lg)
+            }
+            
+            Spacer()
+        }
+        .background(Color.phoenixBackground)
+    }
+}

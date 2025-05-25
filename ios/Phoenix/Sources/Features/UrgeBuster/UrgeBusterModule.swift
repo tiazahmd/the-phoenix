@@ -1,108 +1,10 @@
 import SwiftUI
 
-// MARK: - UrgeBusterTool Enum
-
-enum UrgeBusterTool: String, CaseIterable, Identifiable {
-    case quickPuzzle = "quick_puzzle"
-    case coldWaterTimer = "cold_water_timer"
-    case twoFactorPrompt = "two_factor_prompt"
-    case safetyCheck = "safety_check"
-    case memoryFlashback = "memory_flashback"
-    
-    var id: String { rawValue }
-    
-    var title: String {
-        switch self {
-        case .quickPuzzle: return "Quick Puzzle"
-        case .coldWaterTimer: return "Cold Water Timer"
-        case .twoFactorPrompt: return "Two-Factor Check"
-        case .safetyCheck: return "Safety Check"
-        case .memoryFlashback: return "Memory Flashback"
-        }
-    }
-    
-    var description: String {
-        switch self {
-        case .quickPuzzle: return "Focus your mind with a sliding puzzle"
-        case .coldWaterTimer: return "30-second breathing exercise"
-        case .twoFactorPrompt: return "Pause and reflect before acting"
-        case .safetyCheck: return "Verify your environment and emotions"
-        case .memoryFlashback: return "Reconnect with positive memories"
-        }
-    }
-    
-    var icon: String {
-        switch self {
-        case .quickPuzzle: return "puzzlepiece.fill"
-        case .coldWaterTimer: return "timer"
-        case .twoFactorPrompt: return "questionmark.circle.fill"
-        case .safetyCheck: return "checkmark.shield.fill"
-        case .memoryFlashback: return "heart.circle.fill"
-        }
-    }
-    
-    var color: Color {
-        switch self {
-        case .quickPuzzle: return .phoenixPrimary
-        case .coldWaterTimer: return .phoenixSuccess
-        case .twoFactorPrompt: return .phoenixWarning
-        case .safetyCheck: return .phoenixDanger
-        case .memoryFlashback: return .phoenixPrimaryLight
-        }
-    }
-}
-
-// MARK: - Main UrgeBuster View
-struct UrgeBusterView: View {
-    @State private var selectedTool: UrgeBusterTool?
-    @State private var showingEmergencyContact = false
-    @State private var animateCards = false
-    
-    private let tools = UrgeBusterTool.allCases
-    
-    var body: some View {
-        ZStack {
-            Color.phoenixBackground.ignoresSafeArea()
-            
-            if let selectedTool = selectedTool {
-                UrgeBusterToolDetailView(tool: selectedTool) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        self.selectedTool = nil
-                    }
-                }
-                .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
-            } else {
-                UrgeBusterMainView(
-                    tools: tools,
-                    animateCards: animateCards,
-                    onToolSelected: { tool in
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            selectedTool = tool
-                        }
-                    },
-                    onEmergencyContact: {
-                        showingEmergencyContact = true
-                    }
-                )
-            }
-        }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 0.8).delay(0.2)) {
-                animateCards = true
-            }
-        }
-        .alert("Emergency Contact", isPresented: $showingEmergencyContact) {
-            Button("Call Now") {
-                // TODO: Implement emergency contact calling
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This would call your emergency contact or crisis helpline.")
-        }
-    }
-}
+// MARK: - UrgeBuster Supporting Views
 
 // MARK: - Supporting Views
+
+// MARK: - Tool Detail View
 
 struct UrgeBusterToolDetailView: View {
     let tool: UrgeBusterTool
@@ -140,30 +42,15 @@ struct UrgeBusterToolDetailView: View {
             Group {
                 switch tool {
                 case .quickPuzzle:
-                    Text("Quick Puzzle Tool")
-                        .font(.phoenixTitle2)
-                        .foregroundColor(.phoenixTextPrimary)
-                        .padding()
+                    QuickPuzzleView()
                 case .coldWaterTimer:
-                    Text("Cold Water Timer Tool")
-                        .font(.phoenixTitle2)
-                        .foregroundColor(.phoenixTextPrimary)
-                        .padding()
+                    ColdWaterTimerView()
                 case .twoFactorPrompt:
-                    Text("Two-Factor Prompt Tool")
-                        .font(.phoenixTitle2)
-                        .foregroundColor(.phoenixTextPrimary)
-                        .padding()
+                    TwoFactorPromptView()
                 case .safetyCheck:
-                    Text("Safety Check Tool")
-                        .font(.phoenixTitle2)
-                        .foregroundColor(.phoenixTextPrimary)
-                        .padding()
+                    SafetyCheckView()
                 case .memoryFlashback:
-                    Text("Memory Flashback Tool")
-                        .font(.phoenixTitle2)
-                        .foregroundColor(.phoenixTextPrimary)
-                        .padding()
+                    MemoryFlashbackView()
                 }
             }
             .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
@@ -171,6 +58,8 @@ struct UrgeBusterToolDetailView: View {
         .background(Color.phoenixBackground)
     }
 }
+
+// MARK: - Main View
 
 struct UrgeBusterMainView: View {
     let tools: [UrgeBusterTool]
@@ -290,6 +179,8 @@ struct UrgeBusterMainView: View {
     }
 }
 
+// MARK: - Tool Card
+
 struct UrgeBusterToolCard: View {
     let tool: UrgeBusterTool
     let action: () -> Void
@@ -344,3 +235,10 @@ struct UrgeBusterToolCard: View {
         }, perform: {})
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    UrgeBusterView()
+        .environmentObject(AuthenticationManager())
+} 

@@ -4,10 +4,21 @@ import Combine
 class APIClient {
     static let shared = APIClient()
     
-    private let baseURL = URL(string: "http://localhost:8000/api/v1")!
+    private let baseURL = URL(string: "http://127.0.0.1:8000/api/v1")!
     private let session = URLSession.shared
     
-    private init() {}
+    private init() {
+        // Clear any cached cookies on app start for clean authentication
+        clearCookies()
+    }
+    
+    private func clearCookies() {
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                HTTPCookieStorage.shared.deleteCookie(cookie)
+            }
+        }
+    }
     
     // MARK: - Authentication
     
@@ -69,13 +80,8 @@ class APIClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        // Add CSRF token and session handling for Django
-        if let cookies = HTTPCookieStorage.shared.cookies(for: url) {
-            let cookieHeader = HTTPCookie.requestHeaderFields(with: cookies)
-            for (key, value) in cookieHeader {
-                request.setValue(value, forHTTPHeaderField: key)
-            }
-        }
+        // For personal project: simplified auth without session cookies for login
+        // Session cookies will be handled automatically by URLSession for authenticated requests
         
         if let body = body {
             do {
@@ -86,7 +92,16 @@ class APIClient {
         }
         
         return session.dataTaskPublisher(for: request)
-            .map(\.data)
+            .tryMap { data, response in
+                // Debug logging
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("HTTP Status: \(httpResponse.statusCode)")
+                }
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("Response: \(responseString)")
+                }
+                return data
+            }
             .decode(type: T.self, decoder: JSONDecoder())
             .eraseToAnyPublisher()
     }
@@ -102,6 +117,105 @@ class APIClient {
 // MARK: - Request/Response Models
 
 struct EmptyBody: Codable {}
+
+struct LoginRequest: Codable {
+    let username: String
+    let password: String
+}
+
+struct LoginResponse: Codable {
+    let user: UserResponse
+    let message: String
+}
+
+struct UserResponse: Codable {
+    let id: String  // Django returns UUID as string
+    let email: String
+    let username: String
+    let firstName: String
+    let lastName: String
+    let avatar: String?
+    let bio: String?
+    let dateOfBirth: String?
+    let timezone: String?
+    let notificationPreferences: [String: AnyCodable]?
+    let profile: UserProfileResponse?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, email, username, avatar, bio, timezone, profile
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case dateOfBirth = "date_of_birth"
+        case notificationPreferences = "notification_preferences"
+    }
+}
+
+struct UserProfileResponse: Codable {
+    let progressPoints: Int
+    let streakCount: Int
+    let completedExercises: Int
+    let completedQuizzes: Int
+    let badges: [AnyCodable]
+    let achievements: [AnyCodable]
+    
+    enum CodingKeys: String, CodingKey {
+        case progressPoints = "progress_points"
+        case streakCount = "streak_count"
+        case completedExercises = "completed_exercises"
+        case completedQuizzes = "completed_quizzes"
+        case badges, achievements
+    }
+}
+
+// Helper for decoding arbitrary JSON values
+struct AnyCodable: Codable {
+    let value: Any
+    
+    init<T>(_ value: T?) {
+        self.value = value ?? ()
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if let intValue = try? container.decode(Int.self) {
+            value = intValue
+        } else if let doubleValue = try? container.decode(Double.self) {
+            value = doubleValue
+        } else if let stringValue = try? container.decode(String.self) {
+            value = stringValue
+        } else if let boolValue = try? container.decode(Bool.self) {
+            value = boolValue
+        } else if let arrayValue = try? container.decode([AnyCodable].self) {
+            value = arrayValue.map { $0.value }
+        } else if let dictValue = try? container.decode([String: AnyCodable].self) {
+            value = dictValue.mapValues { $0.value }
+        } else {
+            value = ()
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        
+        switch value {
+        case let intValue as Int:
+            try container.encode(intValue)
+        case let doubleValue as Double:
+            try container.encode(doubleValue)
+        case let stringValue as String:
+            try container.encode(stringValue)
+        case let boolValue as Bool:
+            try container.encode(boolValue)
+        case let arrayValue as [Any]:
+            try container.encode(arrayValue.map { AnyCodable($0) })
+        case let dictValue as [String: Any]:
+            try container.encode(dictValue.mapValues { AnyCodable($0) })
+        default:
+            try container.encodeNil()
+        }
+    }
+}
 
 struct MessageResponse: Codable {
     let message: String
