@@ -1,18 +1,31 @@
 {
   "name": "the-phoenix",
-  "version": "1.0.0",
-  "description": "The Phoenix Project - AWS Lambda Functions",
+  "version": "2.0.0",
+  "description": "The Phoenix Project - A modern, serverless application",
   "private": true,
   "workspaces": [
     "lambda/*"
   ],
   "scripts": {
-    "test": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
-    "lint": "eslint lambda/*/src/**/*.js"
+    "test": "npm run test:lambda && npm run test:integration",
+    "test:lambda": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
+    "test:integration": "cd tests && npm test",
+    "lint": "npm run lint:lambda",
+    "lint:lambda": "eslint lambda/*/src/**/*.js",
+    "security": "npm audit && snyk test",
+    "clean": "rm -rf node_modules && rm -rf lambda/*/node_modules && npm ci",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.29.1"
+    "eslint-plugin-import": "^2.29.1",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "snyk": "^1.1280.0"
+  },
+  "lint-staged": {
+    "*.js": "eslint --cache --fix",
+    "*.{js,css,md}": "prettier --write"
   }
 }
