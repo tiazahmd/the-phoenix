@@ -1,20 +1,27 @@
 from .base import *
+import dj_database_url
+import os
 
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'phoenix_test',
-        'USER': 'username',  # From DATABASE_URL
-        'PASSWORD': 'password',  # From DATABASE_URL
-        'HOST': 'localhost',  # From DATABASE_URL
-        'PORT': '5432',  # From DATABASE_URL
+# Database - use DATABASE_URL if available, otherwise default
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ['DATABASE_URL'])
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'phoenix_test',
+            'USER': 'postgres',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 # Use fast password hasher for testing
 PASSWORD_HASHERS = [
