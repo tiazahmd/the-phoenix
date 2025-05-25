@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const sharp = require('sharp');
 const s3 = new AWS.S3();
+const sns = new AWS.SNS();
 
 const SUPPORTED_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
 const SIZES = [
@@ -10,12 +11,14 @@ const SIZES = [
 ];
 
 exports.handler = async (event) => {
+    console.log('Processing event:', JSON.stringify(event, null, 2));
+    
     try {
-        console.log('Processing event:', JSON.stringify(event, null, 2));
-        
         const bucket = event.Records[0].s3.bucket.name;
         const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
         
+        console.log(`Processing image from bucket: ${bucket}, key: ${key}`);
+
         // Check if this is a supported image format
         const format = key.split('.').pop().toLowerCase();
         if (!SUPPORTED_FORMATS.includes(format)) {
@@ -33,56 +36,69 @@ exports.handler = async (event) => {
             Key: key
         }).promise();
         
-        // Process image for each size
-        const processedImages = await Promise.all(SIZES.map(async (size) => {
-            console.log(`Processing size: ${size.suffix}`);
-            
-            const resizedImage = await sharp(inputImage.Body)
-                .resize(size.width, size.height, {
-                    fit: 'inside',
-                    withoutEnlargement: true
-                })
-                .toFormat(format)
-                .toBuffer();
-            
-            const newKey = `${key.substring(0, key.lastIndexOf('.'))}/${size.suffix}.${format}`;
-            
-            // Upload to S3
-            await s3.putObject({
-                Bucket: bucket,
-                Key: newKey,
-                Body: resizedImage,
-                ContentType: `image/${format}`
-            }).promise();
-            
-            return {
-                size: size.suffix,
-                key: newKey
-            };
-        }));
+        console.log('Successfully retrieved image from S3');
         
-        console.log('Successfully processed images:', JSON.stringify(processedImages, null, 2));
-        
-        // Publish SNS notification about successful processing
-        const sns = new AWS.SNS();
+        // Process image for different sizes
+        const sizes = {
+            thumbnail: { width: 150, height: 150 },
+            medium: { width: 800, height: 800 },
+            large: { width: 1600, height: 1600 }
+        };
+
+        const processedImages = await Promise.all(
+            Object.entries(sizes).map(async ([size, dimensions]) => {
+                console.log(`Processing ${size} version...`);
+                const processedBuffer = await sharp(inputImage.Body)
+                    .resize(dimensions.width, dimensions.height, {
+                        fit: 'inside',
+                        withoutEnlargement: true
+                    })
+                    .toBuffer();
+
+                const targetKey = `${key.replace('uploads/', `${size}/`)}`;
+                
+                await s3.putObject({
+                    Bucket: bucket,
+                    Key: targetKey,
+                    Body: processedBuffer,
+                    ContentType: 'image/jpeg'
+                }).promise();
+
+                console.log(`Successfully uploaded ${size} version to ${targetKey}`);
+                return { size, key: targetKey };
+            })
+        );
+
+        // Send notification about processed images
+        const message = {
+            type: 'IMAGE_PROCESSED',
+            message: {
+                originalKey: key,
+                processedVersions: processedImages,
+                timestamp: new Date().toISOString()
+            }
+        };
+
         await sns.publish({
             TopicArn: process.env.SNS_TOPIC_ARN,
-            Message: JSON.stringify({
-                type: 'IMAGE_PROCESSED',
-                originalImage: key,
-                processedImages: processedImages,
-                timestamp: new Date().toISOString()
-            })
+            Message: JSON.stringify(message),
+            MessageAttributes: {
+                type: {
+                    DataType: 'String',
+                    StringValue: 'IMAGE_PROCESSED'
+                }
+            }
         }).promise();
-        
+
+        console.log('Successfully published notification to SNS');
+
         return {
             statusCode: 200,
             body: JSON.stringify({
                 message: 'Image processed successfully',
-                processedImages: processedImages
+                processedImages
             })
         };
-        
     } catch (error) {
         console.error('Error processing image:', error);
         
