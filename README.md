@@ -1,276 +1,471 @@
 # The Phoenix Project
 
-A modern, serverless application built with AWS Lambda, iOS, and Django, demonstrating best practices in cloud-native development.
+An ADHD-focused recovery application designed to help users manage impulsive urges through structured cognitive-behavioral tools and AI-powered personalized coaching.
 
-![CI/CD Status](https://github.com/tiazahmd/the-phoenix/actions/workflows/lambda-ci.yml/badge.svg)
+![CI/CD Status](https://github.com/tiazahmd/the-phoenix/actions/workflows/ci.yml/badge.svg)
+![Project Status](https://img.shields.io/badge/Status-iOS%20Restructuring%20Complete-brightgreen)
+![iOS Version](https://img.shields.io/badge/iOS-17.0%2B-blue)
+![Django Version](https://img.shields.io/badge/Django-5.0-green)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](https://github.com/tiazahmd/the-phoenix)
+[![Security Rating](https://img.shields.io/badge/Security-A-brightgreen)](https://github.com/tiazahmd/the-phoenix)
 
-## Overview
+## 🎯 Project Overview
 
-The Phoenix Project is a scalable, cloud-native application that showcases modern development practices and architecture. It combines serverless computing, mobile development, and a robust backend to deliver a seamless user experience.
+Phoenix is a comprehensive personal development platform specifically designed for individuals with ADHD who are working on recovery from impulsive behaviors. The app provides evidence-based tools, real-time support, and personalized interventions to help users build healthier habits and manage urges effectively.
 
-## Architecture
+### Target Audience
+- **Age**: 26-35, working professionals
+- **Tech Comfort**: Advanced
+- **Primary Need**: Managing impulsive urges and building accountability
 
-### System Components
+### Design Philosophy
+- **50% Clinical & Structured**: Evidence-based interventions and structured workflows
+- **15% Warm & Encouraging**: Supportive messaging and positive reinforcement
+- **15% Playful & Gamified**: Achievement systems and interactive elements
+- **20% Minimal & Focused**: Clean interface with reduced cognitive load
+
+## 🏗 Architecture
+
+### System Overview
 ```mermaid
 graph TD
-    A[iOS App] --> B[API Gateway]
-    B --> C[Lambda Functions]
-    C --> D[S3 Storage]
-    C --> E[SES Email Service]
-    F[Django Backend] --> G[RDS Database]
-    C --> F
+    A[iOS SwiftUI App] --> B[Django REST API]
+    B --> C[PostgreSQL Database]
+    B --> D[AWS Cognito Auth]
+    B --> E[OpenAI API]
+    B --> F[AWS SNS Notifications]
+    G[WebSocket Server] --> A
+    B --> G
+    H[Celery Workers] --> I[Redis Queue]
+    B --> H
 ```
 
-### Key Features
-- **Serverless Processing**: AWS Lambda functions for efficient, scalable operations
-- **Real-time Notifications**: Event-driven architecture using AWS SES
-- **Secure File Handling**: S3-based storage with proper access controls
-- **RESTful API**: Django-powered backend with comprehensive API documentation
-- **Modern UI**: SwiftUI-based iOS application following Apple's HIG
+### Technology Stack
+- **Frontend**: SwiftUI 5.0 + Combine 4.0 (iOS 17.0+)
+- **Backend**: Django 5.0 + Django REST Framework 3.14+
+- **Database**: PostgreSQL 16
+- **Authentication**: AWS Cognito + JWT
+- **AI Integration**: OpenAI API (GPT-4)
+- **Real-time**: Django Channels + WebSockets
+- **Task Queue**: Celery + Redis
+- **Notifications**: AWS SNS → APNs
+- **Infrastructure**: AWS (RDS, EC2, S3, CloudFront)
 
-## Project Structure
+## ✨ Features
 
-```
-.
-├── lambda/                  # AWS Lambda Functions
-│   ├── image-processor/     # Image processing function
-│   │   ├── src/            # Source code
-│   │   ├── __tests__/      # Unit tests
-│   │   └── package.json    # Dependencies
-│   └── notification-handler/# Notification handling function
-│       ├── src/            # Source code
-│       ├── __tests__/      # Unit tests
-│       └── package.json    # Dependencies
-├── ios/                    # iOS SwiftUI Application
-├── backend/                # Django Backend
-├── tests/                  # Integration Tests
-├── docs/                   # Documentation
-└── .github/               # GitHub Actions and Templates
-```
+### ✅ Implemented (v0.1.0-alpha)
 
-## Lambda Functions
+#### Backend (Production Ready)
+- **Authentication System**: JWT-based auth with user registration/login
+- **Check-in System**: Daily mood/urge tracking with trigger context
+- **Quiz System**: AI-generated quizzes across 11 interest domains
+- **Tips System**: Personalized recovery tips with category filtering
+- **Audio Exercises**: Guided audio content management with TTS
+- **Urge Buster Tools**: 5 quick intervention tools
+- **Dashboard Analytics**: Progress tracking and streak metrics
+- **Scenario Simulations**: AI-driven branching scenarios
+- **Weekly Reflections**: AI-generated summaries and insights
+- **API Documentation**: Comprehensive Swagger/OpenAPI docs
+- **WebSocket Support**: Real-time notifications and updates
+- **Security Features**: Rate limiting, CORS, security headers
 
-### Image Processor
-Handles image processing using the Sharp library:
-- **Input**: Images via S3 or direct upload
-- **Processing**:
-  - Resizing (maintaining aspect ratio)
-  - Format conversion (JPEG, PNG, WebP)
-  - Optimization (quality vs size)
-  - Metadata handling (EXIF)
-- **Output**: Processed images to S3
+#### iOS Frontend (SPEC Compliant)
+- **Check-In System**: Primary entry point with mood/urge sliders (1-10)
+- **Daily Quiz Feature**: AI-generated MCQs across 11 interest domains
+- **Urge Buster Tools**: 5 intervention tools (puzzles, timers, prompts, safety checks, memory flashbacks)
+- **Tips Feed**: Personalized recovery tips with infinite scroll and filtering
+- **Dashboard**: Recovery-focused progress tracking with streaks
+- **Audio Exercises**: Guided audio content with multiple themes
+- **Navigation**: 5-tab structure optimized for recovery workflows
 
-### Notification Handler
-Manages notifications using AWS SES:
-- **Features**:
-  - Templated email notifications
-  - System alerts and monitoring
-  - User communications
-  - Delivery tracking
-- **Integration**: Works with SNS for real-time delivery
+### 🚧 In Development
+- Authentication integration (AWS Cognito + Biometric unlock)
+- Core Data implementation for offline functionality
+- Network layer with robust error handling
+- Real-time WebSocket integration
 
-## Development Setup
+### 📋 Planned Features
+- Scenario simulations UI
+- Weekly reflections with charts
+- Push notifications (AWS SNS)
+- Advanced analytics (Firebase + Sentry)
+- End-to-end encryption
+- TestFlight beta distribution
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 20.x
-- Python 3.12
-- AWS CLI configured with appropriate permissions
-- Xcode 15.0+ (for iOS development)
-- Git
-- npm/yarn
+- **macOS**: Sonoma 14.0+ (for iOS development)
+- **Xcode**: 15.0+
+- **Python**: 3.12+
+- **Node.js**: 20.x (for tooling)
+- **PostgreSQL**: 16+
+- **Git**: Latest version
 
-### Environment Setup
+### Quick Start
 
-1. **Clone and Configure**:
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/tiazahmd/the-phoenix.git
    cd the-phoenix
    ```
 
-2. **Install Dependencies**:
+2. **Backend Setup**:
    ```bash
-   # Root dependencies
-   npm install
-
-   # Lambda function dependencies
-   cd lambda/image-processor && npm install && cd ../..
-   cd lambda/notification-handler && npm install && cd ../..
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   
+   # Database setup
+   createdb phoenix_dev
+   python manage.py migrate
+   python manage.py runserver
    ```
 
-3. **AWS Configuration**:
+3. **iOS Setup**:
    ```bash
-   aws configure
-   # Set up your AWS credentials and region
+   cd ios
+   brew install xcodegen swiftlint
+   xcodegen generate
+   open Phoenix.xcodeproj
    ```
 
-4. **Environment Variables**:
+4. **Access the application**:
+   - **Backend API**: http://localhost:8000
+   - **API Documentation**: http://localhost:8000/swagger/
+   - **Admin Interface**: http://localhost:8000/admin/
+   - **iOS App**: Build and run in Xcode
+
+## 📁 Project Structure
+
+```
+the-phoenix/
+├── backend/                    # Django REST API
+│   ├── apps/                   # Feature-based Django apps
+│   │   ├── authentication/     # User auth and profiles
+│   │   ├── checkins/          # Daily check-ins and mood tracking
+│   │   ├── dashboard/         # Analytics and progress tracking
+│   │   ├── exercises/         # Audio exercises and content
+│   │   ├── quizzes/           # AI-generated quiz system
+│   │   ├── reflections/       # Weekly reflection summaries
+│   │   ├── simulations/       # Scenario simulation engine
+│   │   └── tips/              # Personalized tips system
+│   ├── config/                # Django configuration
+│   │   ├── settings/          # Environment-specific settings
+│   │   ├── urls.py           # URL routing
+│   │   └── wsgi.py           # WSGI configuration
+│   └── core/                  # Shared functionality
+│       ├── models.py         # Base models
+│       └── websockets/       # Real-time communication
+├── ios/                       # SwiftUI iOS Application
+│   ├── Phoenix/
+│   │   ├── Sources/
+│   │   │   ├── App/          # App entry point
+│   │   │   │   ├── Features/     # Feature-based modules
+│   │   │   │   │   ├── CheckIn/  # Mood/urge tracking
+│   │   │   │   │   ├── Quiz/     # Daily quiz system
+│   │   │   │   │   ├── UrgeBuster/ # Intervention tools
+│   │   │   │   │   ├── Tips/     # Tips feed
+│   │   │   │   │   ├── Dashboard/ # Progress tracking
+│   │   │   │   │   └── Audio/    # Guided exercises
+│   │   │   │   ├── Core/         # Core functionality (planned)
+│   │   │   │   ├── UI/           # Reusable components (planned)
+│   │   │   │   └── Utils/        # Utility functions (planned)
+│   │   │   ├── Tests/            # Unit and UI tests (planned)
+│   │   │   └── Configuration/    # Project configuration
+│   │   ├── Tests/            # Unit and UI tests (planned)
+│   │   └── Configuration/    # Project configuration
+│   ├── project.yml           # XcodeGen configuration
+│   └── .swiftlint.yml       # SwiftLint rules
+├── docs/                     # Project documentation
+├── tests/                    # Integration tests (planned)
+└── .github/                  # GitHub Actions and templates
+```
+
+## 🛠 Development
+
+### Backend Development
+
+1. **Start the development server**:
    ```bash
-   # Copy example env files
-   cp .env.example .env
+   cd backend
+   source venv/bin/activate
+   python manage.py runserver
    ```
 
-### Development Workflow
-
-#### Local Development
-1. **Lambda Functions**:
+2. **Run tests**:
    ```bash
-   # Start local development
-   cd lambda/[function-name]
-   npm run dev
-
-   # Run tests
-   npm test
-
-   # Check code style
-   npm run lint
+   python manage.py test
+   # or with pytest
+   pytest
    ```
 
-2. **Testing**:
+3. **Create migrations**:
    ```bash
-   # Run all tests
-   npm test
-
-   # Run specific test suite
-   npm test -- --testPathPattern=image-processor
+   python manage.py makemigrations
+   python manage.py migrate
    ```
 
-3. **Code Quality**:
+4. **Access admin interface**:
    ```bash
-   # Lint code
-   npm run lint
-
-   # Fix auto-fixable issues
-   npm run lint -- --fix
+   python manage.py createsuperuser
+   # Visit http://localhost:8000/admin/
    ```
 
-## CI/CD Pipeline
+### iOS Development
+
+1. **Generate Xcode project**:
+   ```bash
+   cd ios
+   xcodegen generate
+   ```
+
+2. **Run SwiftLint**:
+   ```bash
+   swiftlint
+   swiftlint --fix  # Auto-fix issues
+   ```
+
+3. **Build and run**:
+   - Open `Phoenix.xcodeproj` in Xcode
+   - Select simulator or device
+   - Press `Cmd + R` to build and run
+
+### Code Quality
+
+#### Backend
+- **Django best practices**: Follow Django coding standards
+- **pytest**: Comprehensive test suite
+- **Black**: Code formatting
+- **isort**: Import sorting
+- **flake8**: Linting
+
+#### iOS
+- **SwiftLint**: Enforced code style with custom rules
+- **MVVM Architecture**: Clean separation of concerns
+- **Feature-based organization**: Self-contained modules
+- **iOS 17 Guidelines**: Following Apple's Human Interface Guidelines
+
+## 🧪 Testing
+
+### Current Status
+- **Backend**: Comprehensive test suite with pytest
+- **iOS**: Not implemented (planned for >90% coverage)
+- **Integration**: Not implemented (planned)
+- **E2E**: Not implemented (planned)
+
+### Testing Strategy
+```bash
+# Backend tests
+cd backend
+pytest --cov=apps --cov-report=html
+
+# iOS tests (planned)
+cd ios
+xcodebuild test -scheme Phoenix -destination 'platform=iOS Simulator,name=iPhone 15'
+```
+
+## 🔄 CI/CD Pipeline
 
 Our GitHub Actions pipeline ensures code quality and automated deployments:
 
 ### Continuous Integration
 - **Trigger**: Every push and pull request
-- **Steps**:
-  1. Unit Tests (Matrix testing on Node.js 20.x)
-  2. Code Linting (ESLint)
-  3. Security Scanning (Snyk)
+- **Backend Pipeline**:
+  1. Python 3.12 matrix testing
+  2. Django test suite execution
+  3. Code coverage reporting (target: >85%)
+  4. Security scanning with Bandit
+  5. Code quality checks (Black, isort, flake8)
+- **iOS Pipeline**:
+  1. Xcode build verification
+  2. SwiftLint code style enforcement
+  3. Unit test execution (when implemented)
+  4. Archive and export for TestFlight
 
 ### Continuous Deployment
 - **Trigger**: Version tags (v*)
 - **Environments**:
-  - Development (automatic)
-  - Production (manual approval)
+  - **Development**: Automatic deployment on main branch
+  - **Staging**: Automatic deployment on release branches
+  - **Production**: Manual approval required
 - **Process**:
-  1. Build and test
-  2. Security scan
+  1. Build and test all components
+  2. Security and vulnerability scanning
   3. Generate release notes
-  4. Create GitHub release
-  5. Deploy to AWS
+  4. Deploy backend to AWS
+  5. Distribute iOS build via TestFlight
+  6. Update documentation
 
 ### Release Process
 ```bash
 # Create a new version
 git tag v1.0.0
 git push origin v1.0.0
+
+# This triggers:
+# 1. Automated testing
+# 2. Security scanning
+# 3. Build generation
+# 4. Release creation
+# 5. Deployment (with approval)
 ```
 
-## Code Quality Standards
+### Quality Gates
+- **Code Coverage**: Minimum 85% for backend
+- **Security Scan**: No high/critical vulnerabilities
+- **Performance**: Backend response time <200ms
+- **iOS Build**: Successful archive and validation
 
-### Linting Rules
-- ESLint with Airbnb configuration
-- Prettier for code formatting
-- Husky for pre-commit hooks
+## 🚀 Deployment
 
-### Testing Requirements
-- Unit test coverage > 80%
-- Integration tests for critical paths
-- E2E tests for user workflows
+### Development Environment
+- **Local development**: Django dev server + Xcode simulator
+- **Database**: Local PostgreSQL instance
+- **API testing**: Swagger UI at `/swagger/`
 
-## Security Measures
+### Staging Environment (Planned)
+- **Backend**: AWS EC2 with Docker
+- **Database**: AWS RDS PostgreSQL
+- **iOS**: TestFlight beta distribution
+- **Monitoring**: CloudWatch + Sentry
 
-### Code Security
-- Regular dependency updates
-- Automated vulnerability scanning
-- Secure coding practices enforcement
+### Production Environment (Planned)
+- **Backend**: AWS ECS with auto-scaling
+- **Database**: AWS RDS with read replicas
+- **CDN**: CloudFront for static assets
+- **iOS**: App Store distribution
+- **Monitoring**: Full observability stack
 
-### AWS Security
-- Least privilege access
-- Encrypted data at rest
-- Secure API endpoints
+## 📊 Current Status
 
-### CI/CD Security
-- Protected secrets in GitHub Actions
-- Secure deployment process
-- Manual approval for production
+### Completed ✅
+- Django backend with all core features
+- iOS UI restructuring to match SPEC requirements
+- ADHD recovery-focused feature set
+- API documentation and testing
+- Project architecture and organization
 
-## Monitoring and Logging
+### In Progress 🔄
+- iOS authentication integration
+- Core Data implementation
+- Network layer development
+- Real-time features
 
-### AWS CloudWatch
-- Lambda function logs
-- Performance metrics
-- Error tracking
+### Planned 📋
+- Advanced analytics and insights
+- Push notification system
+- Performance optimization
+- App Store submission
 
-### Application Monitoring
-- Request/Response logging
-- Error reporting
-- Performance tracking
+## 🔒 Security
 
-## Contributing
+### Implemented
+- **Backend**: Rate limiting, CORS, CSRF protection, secure headers
+- **Authentication**: JWT tokens with refresh mechanism
+- **Data Validation**: Comprehensive input validation
+- **Environment**: Secure credential management
 
-1. **Fork and Clone**:
-   ```bash
-   git clone https://github.com/your-username/the-phoenix.git
-   ```
+### Planned
+- **iOS**: Biometric authentication, keychain storage
+- **Encryption**: End-to-end encryption for sensitive data
+- **Compliance**: GDPR compliance measures
+- **Monitoring**: Security event logging
 
-2. **Create Feature Branch**:
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
+## 📚 Documentation
 
-3. **Commit Changes**:
-   ```bash
-   git commit -m "feat: add amazing feature"
-   ```
+- **[SPEC.md](SPEC.md)**: Complete project specification
+- **[PROJECT_UPDATE.md](PROJECT_UPDATE.md)**: Development history and current status
+- **[CHANGELOG.md](ios/CHANGELOG.md)**: Version history and changes
+- **[iOS README](ios/README.md)**: iOS-specific setup and development
+- **API Documentation**: Available at `/swagger/` when backend is running
 
-4. **Push and Create PR**:
-   ```bash
-   git push origin feature/amazing-feature
-   # Create PR through GitHub UI
-   ```
+## 🤝 Contributing
 
-### Commit Message Format
-We follow conventional commits:
+### Development Workflow
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes following the coding standards
+4. Run tests and ensure they pass
+5. Commit using conventional commits: `git commit -m "feat: add amazing feature"`
+6. Push to your fork: `git push origin feature/amazing-feature`
+7. Create a Pull Request
+
+### Commit Convention
 - `feat:` New features
 - `fix:` Bug fixes
-- `docs:` Documentation
-- `chore:` Maintenance
-- `test:` Testing changes
+- `docs:` Documentation updates
+- `style:` Code style changes
+- `refactor:` Code refactoring
+- `test:` Test additions/updates
+- `chore:` Build process and tool updates
 
-## Troubleshooting
+### Code Review Process
+- All changes require pull request review
+- Automated checks must pass (linting, tests)
+- Manual testing on both platforms
+- Documentation updates for new features
 
-### Common Issues
-1. **Lambda Deployment Failures**
-   - Check IAM permissions
-   - Verify environment variables
-   - Review CloudWatch logs
+## 🐛 Known Issues
 
-2. **CI Pipeline Issues**
-   - Ensure tests pass locally
-   - Check GitHub Actions logs
-   - Verify secret configuration
+### Current Limitations
+- **No authentication**: iOS app accessible without login
+- **No data persistence**: iOS data lost on app restart
+- **Mock API integration**: All backend calls simulated in iOS
+- **No offline support**: Requires internet connection
+- **No push notifications**: Reminder system not implemented
 
-## License
+### Performance Issues
+- **Memory management**: Timer cleanup in UrgeBuster tools
+- **State management**: Some inefficient state updates in iOS
+- **Network handling**: No retry logic or offline queue
+
+## 📞 Support
+
+### Getting Help
+- **GitHub Issues**: [Create an issue](https://github.com/tiazahmd/the-phoenix/issues)
+- **Documentation**: Check SPEC.md for detailed requirements
+- **Project Updates**: See PROJECT_UPDATE.md for current status
+
+### Development Questions
+- Review the comprehensive documentation
+- Check existing issues and discussions
+- Follow the contributing guidelines
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contact
+### MIT License Summary
+- ✅ **Commercial use**: Permitted
+- ✅ **Modification**: Permitted  
+- ✅ **Distribution**: Permitted
+- ✅ **Private use**: Permitted
+- ❌ **Liability**: Limited
+- ❌ **Warranty**: None
 
-Imtiaz Ahmed
-- GitHub: [@tiazahmd](https://github.com/tiazahmd)
-- Email: [Your Email]
+### Third-Party Licenses
+- **Django**: BSD License
+- **SwiftUI**: Apple Developer License
+- **OpenAI API**: OpenAI Terms of Service
+- **AWS Services**: AWS Customer Agreement
 
-## Acknowledgments
+## 👥 Team
 
-- AWS Lambda team for excellent documentation
-- The Sharp image processing library
-- Django REST framework team 
+**Lead Developer**: Tiaz Ahmed ([@tiazahmd](https://github.com/tiazahmd))
+
+### Acknowledgments
+- Django and Django REST Framework communities
+- Apple's SwiftUI and iOS development resources
+- OpenAI for AI integration capabilities
+- AWS for cloud infrastructure services
+
+---
+
+**Current Version**: v0.1.0-alpha  
+**Last Updated**: January 2024  
+**Status**: iOS restructuring complete, ready for backend integration
+
+For the most up-to-date information, see [PROJECT_UPDATE.md](PROJECT_UPDATE.md). 

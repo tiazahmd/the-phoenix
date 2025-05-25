@@ -3,24 +3,29 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
+            CheckInView()
+                .tabItem {
+                    Label("Check-In", systemImage: "heart.text.square.fill")
+                }
+            
+            QuizView()
+                .tabItem {
+                    Label("Quiz", systemImage: "questionmark.circle.fill")
+                }
+            
             DashboardView()
                 .tabItem {
                     Label("Dashboard", systemImage: "chart.bar.fill")
                 }
             
-            ExercisesView()
+            UrgeBusterView()
                 .tabItem {
-                    Label("Exercises", systemImage: "figure.run")
+                    Label("Urge Buster", systemImage: "shield.fill")
                 }
             
-            JournalView()
+            TipsView()
                 .tabItem {
-                    Label("Journal", systemImage: "book.fill")
-                }
-            
-            ProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.fill")
+                    Label("Tips", systemImage: "lightbulb.fill")
                 }
         }
         .tint(.indigo)
