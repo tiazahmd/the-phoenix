@@ -30,7 +30,7 @@ jobs:
     
     - name: Install dependencies
       working-directory: lambda/${{ matrix.function }}
-      run: npm install
+      run: npm ci
     
     - name: Run tests
       working-directory: lambda/${{ matrix.function }}
@@ -60,7 +60,7 @@ jobs:
     
     - name: Install dependencies
       working-directory: lambda/${{ matrix.function }}
-      run: npm install
+      run: npm ci
     
     - name: Run ESLint
       working-directory: lambda/${{ matrix.function }}

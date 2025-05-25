@@ -30,12 +30,11 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-        cache: 'npm'
     
     - name: Deploy Image Processor
       working-directory: lambda/image-processor
       run: |
-        npm install
+        npm ci
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-image-processor-dev \
@@ -44,7 +43,7 @@ jobs:
     - name: Deploy Notification Handler
       working-directory: lambda/notification-handler
       run: |
-        npm install
+        npm ci
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-notification-handler-dev \
@@ -76,12 +75,11 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-        cache: 'npm'
     
     - name: Deploy Image Processor
       working-directory: lambda/image-processor
       run: |
-        npm install
+        npm ci
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-image-processor-prod \
@@ -90,7 +88,7 @@ jobs:
     - name: Deploy Notification Handler
       working-directory: lambda/notification-handler
       run: |
-        npm install
+        npm ci
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-notification-handler-prod \
