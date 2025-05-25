@@ -39,10 +39,8 @@ api_patterns = [
     path('checkins/', include('apps.checkins.urls')),
     path('quizzes/', include('apps.quizzes.urls')),
     path('exercises/', include('apps.exercises.urls')),
-    path('simulations/', include('apps.simulations.urls')),
     path('dashboard/', include('apps.dashboard.urls')),
     path('tips/', include('apps.tips.urls')),
-    path('reflections/', include('apps.reflections.urls')),
 ]
 
 urlpatterns = [
