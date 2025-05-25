@@ -22,6 +22,8 @@ targets:
       - path: Phoenix
         excludes:
           - "Tests/**"
+    resources:
+      - Phoenix/Sources/Core/Storage/Phoenix.xcdatamodeld
     settings:
       base:
         INFOPLIST_FILE: Phoenix/Configuration/Info.plist

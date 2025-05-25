@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct CheckInView: View {
+    @EnvironmentObject private var coreDataStack: CoreDataStack
     @State private var moodLevel: Double = 5
     @State private var urgeLevel: Double = 0
     @State private var triggerContext = ""
     @State private var note = ""
     @State private var showingSuccessMessage = false
+    @State private var isSubmitting = false
     
     var body: some View {
         NavigationStack {
@@ -118,8 +120,14 @@ struct CheckInView: View {
                         submitCheckIn()
                     } label: {
                         HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Submit Check-In")
+                            if isSubmitting {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                    .tint(.white)
+                            } else {
+                                Image(systemName: "checkmark.circle.fill")
+                            }
+                            Text(isSubmitting ? "Submitting..." : "Submit Check-In")
                         }
                         .font(.headline)
                         .foregroundStyle(.white)
@@ -128,7 +136,7 @@ struct CheckInView: View {
                         .background(.indigo)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    .disabled(triggerContext.isEmpty)
+                    .disabled(triggerContext.isEmpty || isSubmitting)
                     
                     // Quick Actions
                     if urgeLevel > 5 {
@@ -176,8 +184,24 @@ struct CheckInView: View {
     }
     
     private func submitCheckIn() {
-        // TODO: Implement API call to POST /checkins
-        showingSuccessMessage = true
+        isSubmitting = true
+        
+        // Save to Core Data first (for offline support)
+        coreDataStack.saveCheckIn(
+            moodLevel: Int(moodLevel),
+            urgeLevel: Int(urgeLevel),
+            triggerContext: triggerContext,
+            note: note
+        )
+        
+        // TODO: Also sync with API when online
+        // APIClient.shared.submitCheckIn(...)
+        
+        // Simulate API delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            isSubmitting = false
+            showingSuccessMessage = true
+        }
     }
     
     private func resetForm() {
