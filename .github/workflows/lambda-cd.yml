@@ -32,22 +32,22 @@ jobs:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install root dependencies
-      run: npm ci
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm ci --workspaces
     
     - name: Deploy Image Processor
-      working-directory: lambda/image-processor
       run: |
-        npm ci --workspace phoenix-image-processor
+        cd lambda/image-processor
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-image-processor-dev \
           --zip-file fileb://function.zip
     
     - name: Deploy Notification Handler
-      working-directory: lambda/notification-handler
       run: |
-        npm ci --workspace phoenix-notification-handler
+        cd lambda/notification-handler
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-notification-handler-dev \
@@ -81,22 +81,22 @@ jobs:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install root dependencies
-      run: npm ci
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm ci --workspaces
     
     - name: Deploy Image Processor
-      working-directory: lambda/image-processor
       run: |
-        npm ci --workspace phoenix-image-processor
+        cd lambda/image-processor
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-image-processor-prod \
           --zip-file fileb://function.zip
     
     - name: Deploy Notification Handler
-      working-directory: lambda/notification-handler
       run: |
-        npm ci --workspace phoenix-notification-handler
+        cd lambda/notification-handler
         zip -r function.zip .
         aws lambda update-function-code \
           --function-name phoenix-notification-handler-prod \
