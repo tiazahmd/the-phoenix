@@ -99,8 +99,8 @@ jobs:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         command: test
-        args: --severity-threshold=high
-        working-directory: lambda/image-processor
+        args: --severity-threshold=high --file=package.json
+      working-directory: lambda/image-processor
     
     - name: Run Snyk on notification-handler
       uses: snyk/actions/node@master
@@ -108,8 +108,8 @@ jobs:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         command: test
-        args: --severity-threshold=high
-        working-directory: lambda/notification-handler
+        args: --severity-threshold=high --file=package.json
+      working-directory: lambda/notification-handler
 
   release:
     needs: [security]
