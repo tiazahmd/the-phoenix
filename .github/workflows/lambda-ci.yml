@@ -73,13 +73,6 @@ jobs:
         cd ../notification-handler
         npm install --legacy-peer-deps
         cd ../..
-        
-        # Cache the lock files for future runs
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git config --global user.name "github-actions[bot]"
-        git add package-lock.json lambda/*/package-lock.json
-        git commit -m "chore: update package-lock files [skip ci]" || true
-        git push || true
     
     - name: Run ESLint
       run: npm run lint

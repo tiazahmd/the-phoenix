@@ -9,7 +9,7 @@
     "security": "snyk test",
     "clean": "rm -rf node_modules package-lock.json lambda/*/node_modules lambda/*/package-lock.json",
     "install-all": "npm install && cd lambda/image-processor && npm install && cd ../notification-handler && npm install",
-    "prepare": "husky"
+    "postinstall": "husky"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
