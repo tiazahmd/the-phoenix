@@ -86,8 +86,24 @@ class APIClient {
         }
         
         return session.dataTaskPublisher(for: request)
-            .map(\.data)
+            .map { data, response in
+                // Debug: Print the raw response
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("HTTP Status: \(httpResponse.statusCode)")
+                }
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("Raw Response: \(responseString)")
+                }
+                return data
+            }
             .decode(type: T.self, decoder: JSONDecoder())
+            .catch { error in
+                print("Decoding Error: \(error)")
+                if let decodingError = error as? DecodingError {
+                    print("Decoding Error Details: \(decodingError)")
+                }
+                return Fail<T, Error>(error: error)
+            }
             .eraseToAnyPublisher()
     }
     
