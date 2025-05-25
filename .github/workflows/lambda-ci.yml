@@ -100,7 +100,7 @@ jobs:
       with:
         command: test
         args: --severity-threshold=high
-        file: lambda/image-processor/package.json
+        working-directory: lambda/image-processor
     
     - name: Run Snyk on notification-handler
       uses: snyk/actions/node@master
@@ -109,7 +109,7 @@ jobs:
       with:
         command: test
         args: --severity-threshold=high
-        file: lambda/notification-handler/package.json
+        working-directory: lambda/notification-handler
 
   release:
     needs: [security]
