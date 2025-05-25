@@ -4,7 +4,7 @@
     "es2021": true,
     "jest": true
   },
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", "airbnb-base"],
   "parserOptions": {
     "ecmaVersion": "latest"
   },
@@ -13,6 +13,7 @@
     "indent": ["error", 4],
     "max-len": ["error", { "code": 120 }],
     "arrow-body-style": "off",
-    "no-param-reassign": ["error", { "props": false }]
+    "no-param-reassign": ["error", { "props": false }],
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/*.spec.js"]}]
   }
 } 
