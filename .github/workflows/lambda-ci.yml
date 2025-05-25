@@ -34,7 +34,7 @@ jobs:
       working-directory: lambda/${{ matrix.function }}
       run: |
         npm install
-        npm test
+        ./node_modules/.bin/jest --coverage
       
     - name: Upload test coverage
       uses: actions/upload-artifact@v4
@@ -64,7 +64,7 @@ jobs:
       working-directory: lambda/${{ matrix.function }}
       run: |
         npm install
-        npm run lint
+        ./node_modules/.bin/eslint .
 
   security:
     needs: [test, lint]
