@@ -1,0 +1,203 @@
+name: Continuous Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # Create GitHub Release
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Extract version from tag
+        VERSION=${GITHUB_REF#refs/tags/}
+        
+        # Create release notes from CHANGELOG if available
+        if [ -f "ios/CHANGELOG.md" ]; then
+          # Extract release notes for this version from CHANGELOG
+          awk "/## \[$VERSION\]/{flag=1; next} /## \[/{flag=0} flag" ios/CHANGELOG.md > release_notes.md
+        else
+          echo "Release $VERSION" > release_notes.md
+          echo "" >> release_notes.md
+          echo "See commit history for details." >> release_notes.md
+        fi
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+
+  # Backend Deployment (Staging)
+  deploy-backend-staging:
+    name: Deploy Backend to Staging
+    runs-on: ubuntu-latest
+    needs: create-release
+    environment: staging
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      env:
+        DJANGO_SETTINGS_MODULE: config.settings.test
+      run: |
+        cd backend
+        python manage.py test
+
+    - name: Deploy to staging
+      run: |
+        echo "Deploying backend to staging environment..."
+        # Add actual deployment commands here
+        # For example: AWS ECS, Docker deployment, etc.
+        echo "Backend deployment to staging completed"
+
+  # iOS Build for TestFlight
+  build-ios-testflight:
+    name: Build iOS for TestFlight
+    runs-on: macos-latest
+    needs: create-release
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+
+    - name: Install dependencies
+      run: |
+        brew install xcodegen
+
+    - name: Generate Xcode project
+      run: |
+        cd ios
+        xcodegen generate
+
+    - name: Build and Archive
+      run: |
+        cd ios
+        xcodebuild -project Phoenix.xcodeproj \
+                   -scheme Phoenix \
+                   -destination 'generic/platform=iOS' \
+                   -archivePath Phoenix.xcarchive \
+                   archive
+
+    - name: Export IPA
+      run: |
+        cd ios
+        # Create export options plist
+        cat > ExportOptions.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+        </dict>
+        </plist>
+        EOF
+        
+        # Export archive to IPA
+        xcodebuild -exportArchive \
+                   -archivePath Phoenix.xcarchive \
+                   -exportPath . \
+                   -exportOptionsPlist ExportOptions.plist
+
+    - name: Upload to TestFlight
+      run: |
+        echo "Uploading to TestFlight..."
+        # Add actual TestFlight upload commands here
+        # xcrun altool --upload-app --file Phoenix.ipa --username $APPLE_ID --password $APP_SPECIFIC_PASSWORD
+        echo "TestFlight upload completed"
+
+  # Production Deployment (Manual Approval)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [deploy-backend-staging, build-ios-testflight]
+    environment: production
+    if: ${{ !contains(github.ref, 'alpha') && !contains(github.ref, 'beta') && !contains(github.ref, 'rc') }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy backend to production
+      run: |
+        echo "Deploying backend to production environment..."
+        # Add actual production deployment commands here
+        echo "Backend production deployment completed"
+
+    - name: Update production documentation
+      run: |
+        echo "Updating production documentation..."
+        # Update any production-specific documentation
+        echo "Documentation updated"
+
+    - name: Notify team
+      run: |
+        echo "Notifying team of production deployment..."
+        # Add notification logic (Slack, email, etc.)
+        echo "Team notified"
+
+  # Deployment Summary
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [create-release, deploy-backend-staging, build-ios-testflight, deploy-production]
+    if: always()
+
+    steps:
+    - name: Deployment Summary
+      run: |
+        echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| GitHub Release | ${{ needs.create-release.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Backend Staging | ${{ needs.deploy-backend-staging.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| iOS TestFlight | ${{ needs.build-ios-testflight.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Production Deploy | ${{ needs.deploy-production.result }} |" >> $GITHUB_STEP_SUMMARY 

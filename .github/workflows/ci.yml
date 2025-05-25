@@ -1,0 +1,237 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20.x'
+
+jobs:
+  # Backend Django Tests
+  backend-tests:
+    name: Backend Tests (Django)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: phoenix_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Django tests
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/phoenix_test
+        DJANGO_SETTINGS_MODULE: config.settings.test
+      run: |
+        cd backend
+        python manage.py collectstatic --noinput
+        python manage.py migrate
+        python manage.py test
+
+    - name: Run pytest with coverage
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/phoenix_test
+        DJANGO_SETTINGS_MODULE: config.settings.test
+      run: |
+        cd backend
+        pytest --cov=apps --cov-report=xml --cov-report=html
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+
+  # Backend Code Quality
+  backend-quality:
+    name: Backend Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install black isort flake8 bandit safety
+
+    - name: Run Black (code formatting)
+      run: |
+        cd backend
+        black --check --diff .
+
+    - name: Run isort (import sorting)
+      run: |
+        cd backend
+        isort --check-only --diff .
+
+    - name: Run flake8 (linting)
+      run: |
+        cd backend
+        flake8 .
+
+    - name: Run Bandit (security)
+      run: |
+        cd backend
+        bandit -r . -x tests/
+
+    - name: Run Safety (dependency security)
+      run: |
+        cd backend
+        safety check
+
+  # iOS Build and Validation
+  ios-build:
+    name: iOS Build & Validation
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.0'
+
+    - name: Install dependencies
+      run: |
+        brew install xcodegen swiftlint
+
+    - name: Generate Xcode project
+      run: |
+        cd ios
+        xcodegen generate
+
+    - name: Run SwiftLint
+      run: |
+        cd ios
+        swiftlint --strict
+
+    - name: Build iOS app
+      run: |
+        cd ios
+        xcodebuild -project Phoenix.xcodeproj \
+                   -scheme Phoenix \
+                   -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0' \
+                   clean build
+
+    - name: Run iOS tests (when available)
+      run: |
+        cd ios
+        # Uncomment when tests are implemented
+        # xcodebuild test -project Phoenix.xcodeproj \
+        #                 -scheme Phoenix \
+        #                 -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0'
+        echo "iOS tests not yet implemented - skipping"
+
+  # Security Scanning
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Documentation Check
+  docs-check:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check documentation files exist
+      run: |
+        test -f README.md || (echo "README.md missing" && exit 1)
+        test -f PROJECT_UPDATE.md || (echo "PROJECT_UPDATE.md missing" && exit 1)
+        test -f ios/README.md || (echo "ios/README.md missing" && exit 1)
+        test -f ios/CHANGELOG.md || (echo "ios/CHANGELOG.md missing" && exit 1)
+        echo "All required documentation files present"
+
+    - name: Check for TODO comments in production code
+      run: |
+        # Allow TODO comments but warn about them
+        TODO_COUNT=$(grep -r "TODO" --include="*.py" --include="*.swift" . | wc -l)
+        echo "Found $TODO_COUNT TODO comments"
+        if [ $TODO_COUNT -gt 50 ]; then
+          echo "Warning: High number of TODO comments ($TODO_COUNT)"
+        fi
+
+  # Build Summary
+  build-summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [backend-tests, backend-quality, ios-build, security-scan, docs-check]
+    if: always()
+
+    steps:
+    - name: Build Summary
+      run: |
+        echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Backend Tests | ${{ needs.backend-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Backend Quality | ${{ needs.backend-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| iOS Build | ${{ needs.ios-build.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Documentation | ${{ needs.docs-check.result }} |" >> $GITHUB_STEP_SUMMARY 
