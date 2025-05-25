@@ -6,6 +6,9 @@ on:
     paths:
       - 'lambda/**'
       - '.github/workflows/lambda-ci.yml'
+      - 'package.json'
+      - '.npmrc'
+      - '*.json'
     tags:
       - 'v*'
   pull_request:
@@ -13,6 +16,9 @@ on:
     paths:
       - 'lambda/**'
       - '.github/workflows/lambda-ci.yml'
+      - 'package.json'
+      - '.npmrc'
+      - '*.json'
 
 jobs:
   test:
