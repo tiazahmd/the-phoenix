@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "test": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
-    "lint": "eslint \"lambda/*/src/**/*.js\" \"lambda/*/tests/**/*.js\"",
+    "lint": "eslint \"lambda/*/src/**/*.js\" \"lambda/*/__tests__/**/*.js\"",
     "security": "snyk test",
     "clean": "rm -rf node_modules package-lock.json lambda/*/node_modules lambda/*/package-lock.json",
     "install-all": "npm install && cd lambda/image-processor && npm install && cd ../notification-handler && npm install",
