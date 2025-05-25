@@ -1,0 +1,13 @@
+{
+  "name": "the-phoenix",
+  "version": "1.0.0",
+  "description": "The Phoenix Project - AWS Lambda Functions",
+  "private": true,
+  "workspaces": [
+    "lambda/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  }
+}

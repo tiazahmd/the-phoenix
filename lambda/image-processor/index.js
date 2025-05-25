@@ -1,14 +1,15 @@
 const AWS = require('aws-sdk');
 const sharp = require('sharp');
+
 const s3 = new AWS.S3();
 const sns = new AWS.SNS();
 
 const SUPPORTED_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
-const SIZES = [
-    { width: 100, height: 100, suffix: 'thumbnail' },
-    { width: 800, height: null, suffix: 'medium' },
-    { width: 1200, height: null, suffix: 'large' }
-];
+const SIZES = {
+    thumbnail: { width: 150, height: 150 },
+    medium: { width: 800, height: 800 },
+    large: { width: 1600, height: 1600 }
+};
 
 exports.handler = async (event) => {
     console.log('Processing event:', JSON.stringify(event, null, 2));
@@ -39,14 +40,8 @@ exports.handler = async (event) => {
         console.log('Successfully retrieved image from S3');
         
         // Process image for different sizes
-        const sizes = {
-            thumbnail: { width: 150, height: 150 },
-            medium: { width: 800, height: 800 },
-            large: { width: 1600, height: 1600 }
-        };
-
         const processedImages = await Promise.all(
-            Object.entries(sizes).map(async ([size, dimensions]) => {
+            Object.entries(SIZES).map(async ([size, dimensions]) => {
                 console.log(`Processing ${size} version...`);
                 const processedBuffer = await sharp(inputImage.Body)
                     .resize(dimensions.width, dimensions.height, {
@@ -61,7 +56,7 @@ exports.handler = async (event) => {
                     Bucket: bucket,
                     Key: targetKey,
                     Body: processedBuffer,
-                    ContentType: 'image/jpeg'
+                    ContentType: `image/${format}`
                 }).promise();
 
                 console.log(`Successfully uploaded ${size} version to ${targetKey}`);

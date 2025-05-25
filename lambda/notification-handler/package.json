@@ -4,8 +4,9 @@
   "description": "Notification handling Lambda function for Phoenix app",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "lint": "eslint ."
+    "test": "jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "aws-sdk": "^2.1531.0"
@@ -15,5 +16,16 @@
     "eslint": "^8.56.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.29.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
   }
 } 
