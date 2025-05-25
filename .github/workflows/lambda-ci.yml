@@ -28,30 +28,20 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Test Image Processor
+    - name: Install root dependencies
+      run: npm install
+    
+    - name: Install Image Processor dependencies
       working-directory: lambda/image-processor
       run: |
         npm ci
-        npm test
+        npm run test
     
-    - name: Test Notification Handler
+    - name: Install Notification Handler dependencies
       working-directory: lambda/notification-handler
       run: |
         npm ci
-        npm test
-
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Run security scan
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high
+        npm run test
 
   lint:
     runs-on: ubuntu-latest
@@ -64,19 +54,24 @@ jobs:
         node-version: '20.x'
         cache: 'npm'
     
-    - name: Install ESLint
-      run: |
-        npm install -g eslint
-        npm install -g eslint-config-airbnb-base eslint-plugin-import
+    - name: Install root dependencies
+      run: npm install
     
-    - name: Lint Image Processor
-      working-directory: lambda/image-processor
+    - name: Install and run ESLint
       run: |
-        npm ci
-        eslint .
+        npm install eslint eslint-config-airbnb-base eslint-plugin-import --save-dev
+        npx eslint lambda/image-processor/
+        npx eslint lambda/notification-handler/
+
+  security:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
     
-    - name: Lint Notification Handler
-      working-directory: lambda/notification-handler
-      run: |
-        npm ci
-        eslint . 
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high 
