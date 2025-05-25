@@ -1,0 +1,82 @@
+name: Lambda CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'lambda/**'
+      - '.github/workflows/lambda-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'lambda/**'
+      - '.github/workflows/lambda-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Test Image Processor
+      working-directory: lambda/image-processor
+      run: |
+        npm ci
+        npm test
+    
+    - name: Test Notification Handler
+      working-directory: lambda/notification-handler
+      run: |
+        npm ci
+        npm test
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install ESLint
+      run: |
+        npm install -g eslint
+        npm install -g eslint-config-airbnb-base eslint-plugin-import
+    
+    - name: Lint Image Processor
+      working-directory: lambda/image-processor
+      run: |
+        npm ci
+        eslint .
+    
+    - name: Lint Notification Handler
+      working-directory: lambda/notification-handler
+      run: |
+        npm ci
+        eslint . 

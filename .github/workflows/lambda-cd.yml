@@ -1,0 +1,103 @@
+name: Lambda CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'lambda/**'
+  workflow_run:
+    workflows: ["Lambda CI"]
+    types:
+      - completed
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
+    environment: development
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Deploy Image Processor
+      working-directory: lambda/image-processor
+      run: |
+        npm ci
+        zip -r function.zip .
+        aws lambda update-function-code \
+          --function-name phoenix-image-processor-dev \
+          --zip-file fileb://function.zip
+    
+    - name: Deploy Notification Handler
+      working-directory: lambda/notification-handler
+      run: |
+        npm ci
+        zip -r function.zip .
+        aws lambda update-function-code \
+          --function-name phoenix-notification-handler-dev \
+          --zip-file fileb://function.zip
+    
+    - name: Verify Deployments
+      run: |
+        aws lambda wait function-updated --function-name phoenix-image-processor-dev
+        aws lambda wait function-updated --function-name phoenix-notification-handler-dev
+        echo "Development deployment completed successfully"
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Deploy Image Processor
+      working-directory: lambda/image-processor
+      run: |
+        npm ci
+        zip -r function.zip .
+        aws lambda update-function-code \
+          --function-name phoenix-image-processor-prod \
+          --zip-file fileb://function.zip
+    
+    - name: Deploy Notification Handler
+      working-directory: lambda/notification-handler
+      run: |
+        npm ci
+        zip -r function.zip .
+        aws lambda update-function-code \
+          --function-name phoenix-notification-handler-prod \
+          --zip-file fileb://function.zip
+    
+    - name: Verify Deployments
+      run: |
+        aws lambda wait function-updated --function-name phoenix-image-processor-prod
+        aws lambda wait function-updated --function-name phoenix-notification-handler-prod
+        echo "Production deployment completed successfully" 
