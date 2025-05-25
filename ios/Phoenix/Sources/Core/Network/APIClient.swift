@@ -85,14 +85,22 @@ class APIClient {
             }
         }
         
+        // Debug: Print the request details
+        print("🌐 Making request to: \(request.url?.absoluteString ?? "unknown")")
+        print("🔧 Method: \(request.httpMethod ?? "unknown")")
+        if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
+            print("📤 Request Body: \(bodyString)")
+        }
+        
         return session.dataTaskPublisher(for: request)
             .map { data, response in
                 // Debug: Print the raw response
                 if let httpResponse = response as? HTTPURLResponse {
-                    print("HTTP Status: \(httpResponse.statusCode)")
+                    print("📥 HTTP Status: \(httpResponse.statusCode)")
+                    print("📥 Response Headers: \(httpResponse.allHeaderFields)")
                 }
                 if let responseString = String(data: data, encoding: .utf8) {
-                    print("Raw Response: \(responseString)")
+                    print("📥 Raw Response: \(responseString)")
                 }
                 return data
             }
