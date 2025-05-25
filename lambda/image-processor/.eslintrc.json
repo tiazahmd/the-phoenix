@@ -8,6 +8,14 @@
   "parserOptions": {
     "ecmaVersion": "latest"
   },
+  "plugins": ["import"],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "paths": ["src"]
+      }
+    }
+  },
   "rules": {
     "no-console": "off",
     "indent": ["error", 4],
