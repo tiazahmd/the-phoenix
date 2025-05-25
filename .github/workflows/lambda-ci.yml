@@ -56,10 +56,21 @@ jobs:
     
     - name: Clean and install dependencies
       run: |
-        rm -rf node_modules package-lock.json lambda/*/node_modules lambda/*/package-lock.json
-        npm install
-        cd lambda/image-processor && npm install && cd ../..
-        cd lambda/notification-handler && npm install && cd ../..
+        # Clean all node_modules and lock files
+        rm -rf node_modules package-lock.json
+        rm -rf lambda/*/node_modules lambda/*/package-lock.json
+        
+        # Install root dependencies first
+        npm ci || npm install
+        
+        # Install lambda function dependencies
+        cd lambda/image-processor
+        npm ci || npm install
+        cd ../..
+        
+        cd lambda/notification-handler
+        npm ci || npm install
+        cd ../..
     
     - name: Run ESLint
       run: npm run lint
