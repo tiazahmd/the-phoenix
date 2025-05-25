@@ -66,12 +66,12 @@ jobs:
         rm -rf node_modules package-lock.json
         rm -rf lambda/*/node_modules lambda/*/package-lock.json
         
-        # Install and generate lock files
-        npm install
+        # Install with legacy peer deps to avoid conflicts
+        npm install --legacy-peer-deps
         cd lambda/image-processor
-        npm install
+        npm install --legacy-peer-deps
         cd ../notification-handler
-        npm install
+        npm install --legacy-peer-deps
         cd ../..
         
         # Cache the lock files for future runs
