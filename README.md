@@ -1,23 +1,22 @@
 # The Phoenix Project
 
-An ADHD-focused recovery application designed to help users manage impulsive urges through structured cognitive-behavioral tools and AI-powered personalized coaching.
+A **personal** ADHD-focused recovery application designed to help manage impulsive urges through structured cognitive-behavioral tools and AI-powered personalized coaching.
 
 ![CI/CD Status](https://github.com/tiazahmd/the-phoenix/actions/workflows/ci.yml/badge.svg)
-![Project Status](https://img.shields.io/badge/Status-iOS%20Restructuring%20Complete-brightgreen)
+![Project Status](https://img.shields.io/badge/Status-Personal%20Project%20Simplified-brightgreen)
 ![iOS Version](https://img.shields.io/badge/iOS-17.0%2B-blue)
 ![Django Version](https://img.shields.io/badge/Django-5.0-green)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](https://github.com/tiazahmd/the-phoenix)
-[![Security Rating](https://img.shields.io/badge/Security-A-brightgreen)](https://github.com/tiazahmd/the-phoenix)
 
 ## 🎯 Project Overview
 
-Phoenix is a comprehensive personal development platform specifically designed for individuals with ADHD who are working on recovery from impulsive behaviors. The app provides evidence-based tools, real-time support, and personalized interventions to help users build healthier habits and manage urges effectively.
+Phoenix is a **personal development application** specifically designed for individual use by someone with ADHD working on recovery from impulsive behaviors. The app provides evidence-based tools, personalized interventions, and progress tracking to help build healthier habits and manage urges effectively.
 
-### Target Audience
-- **Age**: 26-35, working professionals
-- **Tech Comfort**: Advanced
-- **Primary Need**: Managing impulsive urges and building accountability
+### Personal Project Scope
+- **Single User**: Designed for personal use only
+- **Simplified Architecture**: No complex multi-user infrastructure
+- **Privacy Focused**: Basic authentication for personal data protection
+- **Local-First**: Minimal external dependencies
 
 ### Design Philosophy
 - **50% Clinical & Structured**: Evidence-based interventions and structured workflows
@@ -27,48 +26,39 @@ Phoenix is a comprehensive personal development platform specifically designed f
 
 ## 🏗 Architecture
 
-### System Overview
+### Simplified Architecture
 ```mermaid
 graph TD
     A[iOS SwiftUI App] --> B[Django REST API]
-    B --> C[PostgreSQL Database]
-    B --> D[AWS Cognito Auth]
+    B --> C[SQLite Database]
+    B --> D[Simple Auth]
     B --> E[OpenAI API]
-    B --> F[AWS SNS Notifications]
-    G[WebSocket Server] --> A
-    B --> G
-    H[Celery Workers] --> I[Redis Queue]
-    B --> H
+    F[Local Notifications] --> A
 ```
 
-### Technology Stack
+### Technology Stack (Simplified)
 - **Frontend**: SwiftUI 5.0 + Combine 4.0 (iOS 17.0+)
 - **Backend**: Django 5.0 + Django REST Framework 3.14+
-- **Database**: PostgreSQL 16
-- **Authentication**: AWS Cognito + JWT
+- **Database**: SQLite (simple, local development)
+- **Authentication**: Django built-in auth (username/password)
 - **AI Integration**: OpenAI API (GPT-4)
-- **Real-time**: Django Channels + WebSockets
-- **Task Queue**: Celery + Redis
-- **Notifications**: AWS SNS → APNs
-- **Infrastructure**: AWS (RDS, EC2, S3, CloudFront)
+- **Notifications**: Local iOS notifications
+- **Deployment**: Local development server
 
 ## ✨ Features
 
 ### ✅ Implemented (v0.1.0-alpha)
 
-#### Backend (Production Ready)
-- **Authentication System**: JWT-based auth with user registration/login
+#### Backend (Simplified for Personal Use)
+- **Authentication System**: Simple username/password auth
 - **Check-in System**: Daily mood/urge tracking with trigger context
 - **Quiz System**: AI-generated quizzes across 11 interest domains
 - **Tips System**: Personalized recovery tips with category filtering
 - **Audio Exercises**: Guided audio content management with TTS
 - **Urge Buster Tools**: 5 quick intervention tools
 - **Dashboard Analytics**: Progress tracking and streak metrics
-- **Scenario Simulations**: AI-driven branching scenarios
-- **Weekly Reflections**: AI-generated summaries and insights
-- **API Documentation**: Comprehensive Swagger/OpenAPI docs
-- **WebSocket Support**: Real-time notifications and updates
-- **Security Features**: Rate limiting, CORS, security headers
+- **API Documentation**: Basic Swagger/OpenAPI docs
+- **Local Storage**: SQLite database for simplicity
 
 #### iOS Frontend (SPEC Compliant)
 - **Check-In System**: Primary entry point with mood/urge sliders (1-10)
@@ -80,18 +70,16 @@ graph TD
 - **Navigation**: 5-tab structure optimized for recovery workflows
 
 ### 🚧 In Development
-- Authentication integration (AWS Cognito + Biometric unlock)
+- Simple authentication integration (username/password)
 - Core Data implementation for offline functionality
-- Network layer with robust error handling
-- Real-time WebSocket integration
+- Network layer with basic error handling
+- Local notification system
 
-### 📋 Planned Features
-- Scenario simulations UI
-- Weekly reflections with charts
-- Push notifications (AWS SNS)
-- Advanced analytics (Firebase + Sentry)
-- End-to-end encryption
-- TestFlight beta distribution
+### 📋 Planned Features (Simplified)
+- Enhanced UI polish and animations
+- Data export functionality
+- Basic backup/restore features
+- Performance optimizations
 
 ## 🚀 Getting Started
 
@@ -99,8 +87,6 @@ graph TD
 - **macOS**: Sonoma 14.0+ (for iOS development)
 - **Xcode**: 15.0+
 - **Python**: 3.12+
-- **Node.js**: 20.x (for tooling)
-- **PostgreSQL**: 16+
 - **Git**: Latest version
 
 ### Quick Start
@@ -118,9 +104,9 @@ graph TD
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -r requirements.txt
    
-   # Database setup
-   createdb phoenix_dev
+   # Database setup (SQLite - no external setup needed)
    python manage.py migrate
+   python manage.py createsuperuser  # Create your personal admin account
    python manage.py runserver
    ```
 

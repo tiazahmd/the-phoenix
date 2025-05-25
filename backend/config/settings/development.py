@@ -4,15 +4,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-# Database
+# Database (SQLite for simplicity)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'phoenix_dev',
-        'USER': 'username',  # From DATABASE_URL
-        'PASSWORD': 'password',  # From DATABASE_URL
-        'HOST': 'localhost',  # From DATABASE_URL
-        'PORT': '5432',  # From DATABASE_URL
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -31,6 +27,4 @@ INSTALLED_APPS += ['debug_toolbar']
 MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
 INTERNAL_IPS = ['127.0.0.1']
 
-# Celery settings
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0' 
+# Removed Celery settings (no background tasks needed for personal use) 

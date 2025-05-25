@@ -4,48 +4,27 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from .serializers import (
-    UserRegistrationSerializer,
     UserSerializer,
-    UserProfileSerializer,
     PasswordChangeSerializer,
-    PasswordResetSerializer,
-    PasswordResetConfirmSerializer,
-    EmailVerificationSerializer,
-    TokenRefreshSerializer
 )
-from .models import UserProfile
 
 User = get_user_model()
 
-class UserRegistrationView(generics.CreateAPIView):
-    """
-    Register a new user.
-    """
-    permission_classes = (permissions.AllowAny,)
-    serializer_class = UserRegistrationSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                "user": UserSerializer(user).data,
-                "message": "User registered successfully"
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class UserLoginView(APIView):
     """
-    Login a user.
+    Simple login for personal use.
     """
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        email = request.data.get('email')
+        username = request.data.get('username')
         password = request.data.get('password')
 
+        if not username or not password:
+            return Response({"error": "Username and password required"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(username=username)
         except ObjectDoesNotExist:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -64,7 +43,7 @@ class UserLoginView(APIView):
 
 class UserLogoutView(APIView):
     """
-    Logout a user.
+    Logout user.
     """
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -119,60 +98,9 @@ class PasswordChangeView(APIView):
             return Response({"message": "Password updated successfully"})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class PasswordResetView(APIView):
-    """
-    Request password reset.
-    """
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request):
-        serializer = PasswordResetSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            try:
-                user = User.objects.get(email=email)
-                # Send password reset email
-                # TODO: Implement email sending
-                return Response({"message": "Password reset email sent"})
-            except User.DoesNotExist:
-                return Response({"message": "Password reset email sent"})  # Same message for security
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class PasswordResetConfirmView(APIView):
-    """
-    Confirm password reset.
-    """
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        if serializer.is_valid():
-            # TODO: Implement token validation and password reset
-            return Response({"message": "Password reset successful"})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class EmailVerificationView(APIView):
-    """
-    Verify email address.
-    """
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request):
-        serializer = EmailVerificationSerializer(data=request.data)
-        if serializer.is_valid():
-            # TODO: Implement email verification
-            return Response({"message": "Email verified successfully"})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class TokenRefreshView(APIView):
-    """
-    Refresh authentication token.
-    """
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request):
-        serializer = TokenRefreshSerializer(data=request.data)
-        if serializer.is_valid():
-            # TODO: Implement token refresh
-            return Response({"message": "Token refreshed successfully"})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+# Removed for personal project simplification:
+# - UserRegistrationView (no public registration needed)
+# - PasswordResetView (admin can reset via Django admin)
+# - PasswordResetConfirmView (not needed)
+# - EmailVerificationView (not needed)
+# - TokenRefreshView (using session auth instead) 

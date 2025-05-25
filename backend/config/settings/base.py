@@ -25,7 +25,6 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'corsheaders',
     'drf_yasg',
-    'channels',
 ]
 
 LOCAL_APPS = [
@@ -33,14 +32,9 @@ LOCAL_APPS = [
     'apps.checkins',
     'apps.quizzes',
     'apps.exercises',
-    'apps.simulations',
     'apps.dashboard',
     'apps.tips',
-    'apps.reflections',
     'core.ai',
-    'core.websockets',
-    'core.analytics',
-    'core.notifications',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -75,7 +69,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
-ASGI_APPLICATION = 'config.asgi.application'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -106,51 +99,38 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework settings
+# REST Framework settings (Simplified for personal use)
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 20,
 }
 
-# CORS settings
+# CORS settings (Simplified for local development)
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
-# Swagger settings
+# Swagger settings (Simplified)
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
-        'Bearer': {
+        'Session': {
             'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
+            'name': 'sessionid',
+            'in': 'cookie'
         }
     }
 }
 
-# AWS settings
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_REGION = os.getenv('AWS_REGION')
-COGNITO_USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
-COGNITO_APP_CLIENT_ID = os.getenv('COGNITO_APP_CLIENT_ID')
-
-# OpenAI settings
+# OpenAI settings (Only external service we're keeping)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-
-# Sentry settings
-SENTRY_DSN = os.getenv('SENTRY_DSN')
-
-# Firebase settings
-FIREBASE_CREDENTIALS = os.getenv('FIREBASE_CREDENTIALS')
 
 # Custom user model
 AUTH_USER_MODEL = 'authentication.User'
