@@ -147,4 +147,8 @@ layer.zip
 *-permissions.json
 deploy-*.sh
 create-*.sh
-update-*.sh 
+update-*.sh
+
+# Secure credentials
+backend/SECURE_CREDENTIALS.md
+SECURE_CREDENTIALS.md 
