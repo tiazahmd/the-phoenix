@@ -60,11 +60,20 @@ jobs:
     
     - name: Install dependencies
       working-directory: lambda/${{ matrix.function }}
-      run: npm ci
+      run: |
+        npm ci
+        npm ls eslint eslint-config-airbnb-base eslint-plugin-import || true
     
     - name: Run ESLint
       working-directory: lambda/${{ matrix.function }}
-      run: npx eslint .
+      run: |
+        echo "ESLint version: $(npx eslint --version)"
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        echo "Contents of .eslintrc.json:"
+        cat .eslintrc.json
+        echo "Running ESLint..."
+        npx eslint . --debug
 
   security:
     needs: [test, lint]
