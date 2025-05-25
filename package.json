@@ -3,15 +3,10 @@
   "version": "2.0.0",
   "description": "The Phoenix Project - A modern, serverless application",
   "private": true,
-  "type": "commonjs",
   "scripts": {
-    "test": "npm run test:image-processor && npm run test:notification-handler",
-    "test:image-processor": "cd lambda/image-processor && npm test",
-    "test:notification-handler": "cd lambda/notification-handler && npm test",
-    "lint": "npm run lint:image-processor && npm run lint:notification-handler",
-    "lint:image-processor": "eslint lambda/image-processor/src/",
-    "lint:notification-handler": "eslint lambda/notification-handler/src/",
-    "security": "npm audit && snyk test",
+    "test": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
+    "lint": "eslint \"lambda/*/src/**/*.js\"",
+    "security": "snyk test",
     "clean": "rm -rf node_modules && rm -rf lambda/*/node_modules && npm install",
     "prepare": "husky install"
   },
