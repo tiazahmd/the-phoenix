@@ -66,17 +66,20 @@ jobs:
         rm -rf node_modules package-lock.json
         rm -rf lambda/*/node_modules lambda/*/package-lock.json
         
-        # Install root dependencies first
-        npm ci || npm install
-        
-        # Install lambda function dependencies
+        # Install and generate lock files
+        npm install
         cd lambda/image-processor
-        npm ci || npm install
+        npm install
+        cd ../notification-handler
+        npm install
         cd ../..
         
-        cd lambda/notification-handler
-        npm ci || npm install
-        cd ../..
+        # Cache the lock files for future runs
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git add package-lock.json lambda/*/package-lock.json
+        git commit -m "chore: update package-lock files [skip ci]" || true
+        git push || true
     
     - name: Run ESLint
       run: npm run lint
