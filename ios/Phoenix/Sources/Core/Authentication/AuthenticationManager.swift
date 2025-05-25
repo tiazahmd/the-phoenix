@@ -97,10 +97,18 @@ struct User: Codable, Identifiable {
     let email: String
     let firstName: String
     let lastName: String
+    let avatar: String?
+    let bio: String?
+    let dateOfBirth: String?
+    let timezone: String?
+    let notificationPreferences: [String: String]?
+    let profile: String?
     
     enum CodingKeys: String, CodingKey {
-        case id, username, email
+        case id, username, email, avatar, bio, timezone, profile
         case firstName = "first_name"
         case lastName = "last_name"
+        case dateOfBirth = "date_of_birth"
+        case notificationPreferences = "notification_preferences"
     }
 } 
