@@ -94,8 +94,8 @@ jobs:
         cd ../notification-handler && npm install
     
     - name: Run Snyk on image-processor
-      working-directory: lambda/image-processor
       uses: snyk/actions/node@master
+      working-directory: lambda/image-processor
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
@@ -103,8 +103,8 @@ jobs:
         args: --severity-threshold=high --file=package.json
     
     - name: Run Snyk on notification-handler
-      working-directory: lambda/notification-handler
       uses: snyk/actions/node@master
+      working-directory: lambda/notification-handler
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
