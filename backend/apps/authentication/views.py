@@ -3,8 +3,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model, login, logout
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from .serializers import (
     UserSerializer,
     PasswordChangeSerializer,
@@ -12,7 +10,6 @@ from .serializers import (
 
 User = get_user_model()
 
-@method_decorator(csrf_exempt, name='dispatch')
 class UserLoginView(APIView):
     """
     Simple login for personal use.
@@ -44,7 +41,6 @@ class UserLoginView(APIView):
             "message": "Login successful"
         })
 
-@method_decorator(csrf_exempt, name='dispatch')
 class UserLogoutView(APIView):
     """
     Logout user.
