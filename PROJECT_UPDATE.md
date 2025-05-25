@@ -3,6 +3,22 @@
 ## Project Overview
 The Phoenix is a comprehensive personal development application with a Django backend and iOS (SwiftUI) frontend.
 
+### Purpose & Goals
+- Create a personal development platform that helps users track their growth
+- Provide interactive exercises and real-time progress tracking
+- Offer personalized insights through AI-driven analysis
+- Enable social features for community support
+- Implement gamification elements for engagement
+
+### Key Features (Planned)
+- Daily check-ins and mood tracking
+- Guided exercises and simulations
+- Progress visualization and analytics
+- AI-powered personalized recommendations
+- Community interaction and support
+- Achievement system and rewards
+- Real-time notifications and updates
+
 ## Latest Update
 **Date:** May 25, 2025
 **Current Phase:** Backend Infrastructure Setup
@@ -78,25 +94,25 @@ The Phoenix is a comprehensive personal development application with a Django ba
 the-phoenix/
 ├── backend/
 │   ├── apps/
-│   │   ├── authentication/
-│   │   ├── checkins/
-│   │   ├── dashboard/
-│   │   ├── exercises/
-│   │   ├── quizzes/
-│   │   ├── reflections/
-│   │   ├── simulations/
-│   │   └── tips/
+│   │   ├── authentication/  # User auth and profile management
+│   │   ├── checkins/       # Daily check-ins and mood tracking
+│   │   ├── dashboard/      # User dashboard and analytics
+│   │   ├── exercises/      # Interactive exercises
+│   │   ├── quizzes/        # Assessment and progress tracking
+│   │   ├── reflections/    # Journal and reflection tools
+│   │   ├── simulations/    # Interactive scenario simulations
+│   │   └── tips/           # AI-driven recommendations
 │   ├── config/
-│   │   ├── settings/
+│   │   ├── settings/       # Environment-specific configurations
 │   │   │   ├── base.py
 │   │   │   ├── development.py
 │   │   │   ├── production.py
 │   │   │   └── test.py
 │   │   ├── urls.py
 │   │   └── wsgi.py
-│   └── core/
-│       ├── models.py
-│       └── websockets/
+│   └── core/              # Shared functionality
+│       ├── models.py      # Base models
+│       └── websockets/    # Real-time communication
 ├── requirements.txt
 └── .gitignore
 ```
@@ -158,11 +174,53 @@ Currently implemented schemas:
 - Following security best practices
 - Maintaining test coverage
 
+## Development Environment
+- Operating System: macOS (darwin 24.4.0)
+- IDE/Editor: Cursor
+- Virtual Environment: venv
+- Local Development URL: http://localhost:8000
+- API Documentation URL: http://localhost:8000/swagger/
+- Database Administration: http://localhost:8000/admin/
+
+### Git Workflow
+- Main branch: Protected, requires PR review
+- Development branch: Primary development branch
+- Feature branches: Created for each new feature
+- Commit convention: Following conventional commits
+
+### Local Setup Instructions
+1. Clone repository
+2. Create and activate virtual environment
+3. Install dependencies from requirements.txt
+4. Set up PostgreSQL databases (phoenix_dev, phoenix_test)
+5. Configure environment variables
+6. Run migrations
+7. Create superuser
+8. Start development server
+
+### Current Superuser Credentials
+- Email: ratulbad@gmail.com
+- Username: imtiazahmed
+(Password stored in SECURE_CREDENTIALS.md)
+
 ## Notes
 - All sensitive credentials are stored securely and not in version control
 - Development is following a feature-based branching strategy
 - Regular updates to this document will be maintained
+- Project follows iOS 16 design guidelines for frontend
+- Backend implements REST API best practices
+- Real-time features implemented using WebSockets
+- All dates in UTC unless specified otherwise
 
-## Last Commit
-- Hash: edbe216
-- Message: "feat: Initial Django backend setup with custom User model, PostgreSQL, WebSocket support, API docs, and modular settings" 
+## Version Control
+### Latest Commit
+- Hash: cb6abf1
+- Previous Hash: edbe216
+- Message: "docs: Add PROJECT_UPDATE.md for historical context"
+- Branch: main
+
+### Repository
+- Platform: GitHub
+- URL: https://github.com/tiazahmd/the-phoenix.git
+- Primary Branch: main
+- Current Version: 0.1.0-alpha 
