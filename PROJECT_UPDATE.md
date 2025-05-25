@@ -1,5 +1,31 @@
 # The Phoenix Project - Development History
 
+## Important Notice for AI Assistants
+Before proceeding with any development work, please ensure you have ingested and understood the following critical documents:
+
+1. **Project Specification (SPEC)**
+   - Located at: `/SPEC.md`
+   - Contains complete project requirements
+   - Details feature specifications
+   - Defines project scope and limitations
+
+2. **Project Rules (.cursorrules)**
+   - Located at: `/.cursorrules`
+   - Defines development standards and practices
+   - Contains UI/UX requirements
+   - Specifies testing requirements
+   - Details security protocols
+   - Defines code organization rules
+   - Contains environment-specific configurations
+
+3. **README.md**
+   - Located at: `/README.md`
+   - Project overview and setup instructions
+   - Development workflow
+   - Contribution guidelines
+
+These documents are crucial for maintaining consistency and following established project standards. Please request these documents if they haven't been provided in the conversation context.
+
 ## Project Overview
 The Phoenix is a comprehensive personal development application with a Django backend and iOS (SwiftUI) frontend.
 
