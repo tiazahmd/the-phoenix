@@ -5,9 +5,9 @@
   "private": true,
   "scripts": {
     "test": "cd lambda/image-processor && npm test && cd ../notification-handler && npm test",
-    "lint": "eslint \"lambda/*/src/**/*.js\"",
+    "lint": "eslint \"lambda/*/src/**/*.js\" \"lambda/*/tests/**/*.js\"",
     "security": "snyk test",
-    "clean": "rm -rf node_modules && rm -rf lambda/*/node_modules && npm install",
+    "clean": "rm -rf node_modules lambda/*/node_modules package-lock.json lambda/*/package-lock.json && npm install",
     "prepare": "husky install"
   },
   "devDependencies": {
