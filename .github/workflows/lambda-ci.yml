@@ -57,11 +57,10 @@ jobs:
     - name: Install root dependencies
       run: npm install
     
-    - name: Run ESLint on image-processor
-      run: npx eslint lambda/image-processor/
-    
-    - name: Run ESLint on notification-handler
-      run: npx eslint lambda/notification-handler/
+    - name: Run ESLint
+      run: |
+        npx eslint lambda/image-processor/src/
+        npx eslint lambda/notification-handler/src/
 
   security:
     needs: [test, lint]
