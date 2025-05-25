@@ -4,6 +4,9 @@ import os
 
 DEBUG = True
 
+# Override SECRET_KEY for testing
+SECRET_KEY = os.getenv('SECRET_KEY', 'test-secret-key-for-ci-testing-only-not-for-production')
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Database - use DATABASE_URL if available, otherwise default
